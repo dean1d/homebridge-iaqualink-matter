@@ -131,6 +131,19 @@ describe('CloudIAquaLinkProvider', () => {
     expect(String(fetchMock.mock.calls[2][0])).toContain('/refresh');
   });
 
+  it('falls back to compatible system discovery when signed discovery returns HTTP 400', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login))
+      .mockResolvedValueOnce(response({}, 400))
+      .mockResolvedValueOnce(response(systems));
+    await provider(fetchMock).connect();
+    const fallbackUrl = new URL(String(fetchMock.mock.calls[2][0]));
+    expect(fallbackUrl.pathname).toBe('/devices.json');
+    expect(fallbackUrl.searchParams.get('api_key')).toBeTruthy();
+    expect(fallbackUrl.searchParams.get('authentication_token')).toBe('fixture-authentication-token');
+    expect(fallbackUrl.searchParams.get('user_id')).toBe('100');
+  });
+
   it('times out with a sanitized error', async () => {
     const fetchMock = vi.fn((_url: URL | string, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
       init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));

@@ -61,11 +61,11 @@ The recommended configuration method is the Homebridge UI. A minimal manual conf
 | `password` | — | iAquaLink account password. |
 | `hapEnabled` | `true` | Publish HomeKit/HAP accessories. |
 | `matterEnabled` | `true` | Publish Matter accessories when Matter is enabled in Homebridge. |
-| `enableCloudControl` | `false` | Permit commands that change real pool equipment. Leave disabled for monitoring only. |
+| `enableCloudControl` | `true` | Permit commands that change real pool equipment. Leave disabled for monitoring only. |
 | `pollIntervalSeconds` | `30` | Cloud polling interval from 15 to 300 seconds. |
 | `exposeLightShows` | `true` | Expose Jandy light programs as momentary switches. |
-| `poolLightProgram` | `Caribbean Blue` | Program selected when the Matter pool light is turned on. |
-| `spaLightProgram` | `Caribbean Blue` | Program selected when the Matter spa light is turned on. |
+| `poolLightProgram` | `Caribbean Blue` | Program selected when the Matter pool light is turned on.  Matter does not currently support multiple switches under one device, so you must sellect a default light color if you are using Matter to turn the light on and off. |
+| `spaLightProgram` | `Caribbean Blue` | Program selected when the Matter spa light is turned on. Matter does not currently support multiple switches under one device, so you must sellect a default light color if you are using Matter to turn the light on and off. |
 | `diagnosticMode` | `false` | Log sanitized equipment snapshots for troubleshooting. |
 | `useMockApi` | `false` | Use synthetic equipment during development; never enable for normal operation. |
 
@@ -92,7 +92,7 @@ Matter does not provide the same list of vendor-specific light programs. Use `po
 
 ## HomeKit and Matter
 
-HomeKit/HAP and Matter can be enabled independently. Enabling both and commissioning both bridges into Apple Home may create duplicate controls. Disable the publication method you do not want, or keep only one bridge commissioned.
+HomeKit/HAP and Matter can be enabled independently. Enabling both and commissioning both bridges into Apple Home may create duplicate controls. I would suggest HAP for Homekit and Matter for Alexa/Google
 
 Matter support requires a Matter-capable Homebridge 2 installation. Heating-only and cooling-only thermostat capabilities are declared separately so compatible Matter controllers can show only the applicable modes.
 
@@ -115,7 +115,10 @@ Use `useMockApi: true` to develop without contacting real equipment. `npm run ch
 
 ## Support
 
-Please use [GitHub Issues](https://github.com/dean1d/homebridge-iaqualink/issues) for reproducible bugs and feature requests. Include your Homebridge and Node.js versions, controller type, relevant fixed-text errors, and a sanitized diagnostic snapshot when available.
+Please use [GitHub Issues](https://github.com/dean1d/homebridge-iaqualink/issues) for reproducible bugs and feature requests. Include your Homebridge and Node.js versions, controller type, relevant fixed-text errors, and a sanitized diagnostic snapshot when available.  I am only able to test the equipment that I have, please let me know if there is anything that is having issues on your end.
+
+## Credits
+https://www.home-assistant.io/integrations/iaqualink/ by [flz](https://github.com/flz)
 
 ## Disclaimer
 

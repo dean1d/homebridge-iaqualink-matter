@@ -8,6 +8,7 @@ const API_SIGNING_KEY = 'cj7iYKjiKxOqiLcN65PffA';
 const LOGIN_URL = 'https://prod.zodiac-io.com/users/v1/login';
 const REFRESH_URL = 'https://prod.zodiac-io.com/users/v1/refresh';
 const SYSTEMS_URL = 'https://r-api.iaqualink.net/v2/devices.json';
+const LEGACY_SYSTEMS_URL = 'https://r-api.iaqualink.net/devices.json';
 const SESSION_URL = 'https://p-api.iaqualink.net/v2/mobile/session.json';
 const LIGHT_PROGRAMS = [
   'Alpine White', 'Sky Blue', 'Cobalt Blue', 'Caribbean Blue', 'Spring Green',
@@ -36,7 +37,7 @@ export class CloudAuthenticationError extends Error {
 }
 
 export class CloudRequestError extends Error {
-  constructor(message: string) {
+  constructor(message: string, readonly status?: number) {
     super(message);
     this.name = 'CloudRequestError';
   }
@@ -53,6 +54,7 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
   private readonly now: () => number;
   private sessionId = '';
   private idToken = '';
+  private authenticationToken = '';
   private refreshToken = '';
   private userId = '';
   private country = 'us';
@@ -274,6 +276,7 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
     }
     this.sessionId = sessionId;
     this.idToken = idToken;
+    this.authenticationToken = authenticationToken;
     this.refreshToken = refreshToken;
     this.userId = userId;
     this.country = (stringValue(data.country) || 'us').toLowerCase();
@@ -284,7 +287,20 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
     const signature = createHmac('sha1', API_SIGNING_KEY).update(`${this.userId},${timestamp}`).digest('hex');
     const url = new URL(SYSTEMS_URL);
     url.search = new URLSearchParams({ user_id: this.userId, signature, timestamp }).toString();
-    const data = await this.authenticatedJson(url, 'system discovery', { headers: this.authHeaders() });
+    let data: unknown;
+    try {
+      data = await this.authenticatedJson(url, 'system discovery', { headers: this.authHeaders() });
+    } catch (error) {
+      if (!(error instanceof CloudRequestError) || error.status !== 400) throw error;
+      this.log.debug('Signed iAquaLink discovery returned HTTP 400; retrying with the compatible device-list endpoint.');
+      const legacyUrl = new URL(LEGACY_SYSTEMS_URL);
+      legacyUrl.search = new URLSearchParams({
+        api_key: API_KEY,
+        authentication_token: this.authenticationToken,
+        user_id: this.userId,
+      }).toString();
+      data = await this.authenticatedJson(legacyUrl, 'compatible system discovery', { headers: baseHeaders() });
+    }
     if (!Array.isArray(data)) throw new CloudRequestError('iAquaLink system discovery returned an invalid result.');
     const supported = data.filter(isJsonObject).filter((system) => stringValue(system.device_type) === 'iaqua');
     if (supported.length === 0) throw new CloudRequestError('No supported iAquaLink controller was found on this account.');
@@ -327,7 +343,10 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
           await this.backoff(attempt);
           continue;
         }
-        if (!response.ok) throw new CloudRequestError(`iAquaLink ${operation} failed with HTTP ${response.status}.`);
+        if (!response.ok) throw new CloudRequestError(
+          `iAquaLink ${operation} failed with HTTP ${response.status}.`,
+          response.status,
+        );
         try {
           return await response.json();
         } catch {
@@ -381,7 +400,7 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
     return { ...baseHeaders(), api_key: API_KEY, Authorization: `Bearer ${this.idToken}` };
   }
   private clearSession(): void {
-    this.sessionId = ''; this.idToken = ''; this.refreshToken = ''; this.userId = '';
+    this.sessionId = ''; this.idToken = ''; this.authenticationToken = ''; this.refreshToken = ''; this.userId = '';
     this.systemSerial = ''; this.connected = false;
   }
 }

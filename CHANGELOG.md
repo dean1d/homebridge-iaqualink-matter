@@ -14,6 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Security
 
+## [0.1.1] - 2026-08-04
+
+### Fixed
+
+- System discovery now falls back to the compatible iAquaLink device-list endpoint when signed discovery returns HTTP 400.
+
 ## [0.1.0] - 2026-08-03
 
 ### Added
@@ -49,5 +55,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iaqualink/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iaqualink/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/dean1d/homebridge-iaqualink/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/dean1d/homebridge-iaqualink/releases/tag/v0.1.0
