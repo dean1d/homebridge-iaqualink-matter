@@ -5,10 +5,11 @@
   "headerDisplay": "<p align=\"center\"><img src=\"https://raw.githubusercontent.com/dean1d/homebridge-iAqualink-Matter/main/assets/Jandy.png\" alt=\"Jandy iAquaLink logo\" width=\"180\"></p>\n\nControl supported Jandy iAquaLink pool equipment through HomeKit and Matter.\n\n> This independent community plugin is not affiliated with or endorsed by Jandy or Fluidra.",
   "schema": {
     "type": "object",
+    "required": ["name", "username", "password"],
     "properties": {
-      "name": {"title": "Name", "type": "string", "default": "iAquaLink", "required": true},
-      "username": {"title": "iAquaLink Email", "type": "string", "required": true},
-      "password": {"title": "iAquaLink Password", "type": "string", "required": true},
+      "name": {"title": "Name", "type": "string", "default": "iAquaLink"},
+      "username": {"title": "iAquaLink Email", "type": "string"},
+      "password": {"title": "iAquaLink Password", "type": "string"},
       "enableCloudControl": {
         "title": "Enable Cloud Control",
         "description": "Allow HomeKit and Matter to send commands to real pool equipment.",
