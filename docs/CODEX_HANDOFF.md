@@ -2,7 +2,7 @@
 
 ## Objective
 
-Build a production-quality Homebridge 2 plugin named `homebridge-iaqualink` for one iAquaLink account/system initially. The test system is a Jandy RS4 Combo.
+Build a production-quality Homebridge 2 plugin named `homebridge-iAqualink-Matter` for one iAquaLink account/system initially. The test system is a Jandy RS4 Combo.
 
 ## Confirmed equipment
 

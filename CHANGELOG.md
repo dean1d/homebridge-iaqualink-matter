@@ -55,6 +55,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iaqualink/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/dean1d/homebridge-iaqualink/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/dean1d/homebridge-iaqualink/releases/tag/v0.1.0
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/releases/tag/v0.1.0

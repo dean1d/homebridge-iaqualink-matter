@@ -2,7 +2,7 @@
 
 ## GitHub
 
-1. Create an empty public repository named `homebridge-iaqualink`.
+1. Create an empty public repository named `homebridge-iAqualink-Matter`.
 2. Replace every `YOUR_GITHUB_USERNAME` value in `package.json`.
 3. In VS Code terminal:
 
@@ -11,13 +11,13 @@ git init
 git add .
 git commit -m "Initial Homebridge iAquaLink scaffold"
 git branch -M main
-git remote add origin https://github.com/YOUR_GITHUB_USERNAME/homebridge-iaqualink.git
+git remote add origin https://github.com/YOUR_GITHUB_USERNAME/homebridge-iAqualink-Matter.git
 git push -u origin main
 ```
 
 ## npm preparation
 
-1. Confirm the package name is available: `npm view homebridge-iaqualink`.
+1. Confirm the package name is available: `npm view homebridge-iaqualink-matter`.
 2. Sign in: `npm login`.
 3. Remove `"private": true` from `package.json` only when ready.
 4. Run `npm run check`.

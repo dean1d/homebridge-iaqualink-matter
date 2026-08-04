@@ -1,4 +1,4 @@
-# @dean1d/homebridge-iaqualink
+# homebridge-iAqualink-Matter
 
 Homebridge 2 platform plugin for Jandy iAquaLink pool and spa controllers. It discovers supported equipment from the iAquaLink cloud and publishes it to HomeKit/HAP and Matter.
 
@@ -26,10 +26,10 @@ Homebridge 2 platform plugin for Jandy iAquaLink pool and spa controllers. It di
 
 ## Installation
 
-Search for **@dean1d/homebridge-iaqualink** in the Homebridge UI, or install it from a terminal:
+Search for **homebridge-iAqualink-Matter** in the Homebridge UI, or install it from a terminal:
 
 ```bash
-npm install -g @dean1d/homebridge-iaqualink
+npm install -g homebridge-iaqualink-matter
 ```
 
 Configure the plugin through Homebridge UI and restart Homebridge.
@@ -115,7 +115,7 @@ Use `useMockApi: true` to develop without contacting real equipment. `npm run ch
 
 ## Support
 
-Please use [GitHub Issues](https://github.com/dean1d/homebridge-iaqualink/issues) for reproducible bugs and feature requests. Include your Homebridge and Node.js versions, controller type, relevant fixed-text errors, and a sanitized diagnostic snapshot when available.  I am only able to test the equipment that I have, please let me know if there is anything that is having issues on your end.
+Please use [GitHub Issues](https://github.com/dean1d/homebridge-iAqualink-Matter/issues) for reproducible bugs and feature requests. Include your Homebridge and Node.js versions, controller type, relevant fixed-text errors, and a sanitized diagnostic snapshot when available.  I am only able to test the equipment that I have, please let me know if there is anything that is having issues on your end.
 
 ## Credits
 https://www.home-assistant.io/integrations/iaqualink/ by [flz](https://github.com/flz)
