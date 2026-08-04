@@ -1,0 +1,12 @@
+{
+  "devices_screen": [
+    {"status": "online"},
+    {"title": "Equipment"},
+    {"message": ""},
+    {"aux_1": [{"label": "AIR BLOWER"}, {"state": "0"}, {"type": "0"}]},
+    {"aux_2": [{"label": "SHEER DESCENT"}, {"state": "1"}, {"type": "0"}]},
+    {"aux_3": [{"label": "HIGH SPEED"}, {"state": "0"}, {"type": "0"}]},
+    {"aux_4": [{"label": "POOL LIGHT"}, {"state": "1"}, {"type": "2"}, {"subtype": "1"}]},
+    {"aux_5": [{"label": "SPA LIGHT"}, {"state": "0"}, {"type": "2"}, {"subtype": "1"}]}
+  ]
+}

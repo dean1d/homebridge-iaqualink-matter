@@ -1,0 +1,44 @@
+{
+  "pluginAlias": "iAquaLink",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {"title": "Name", "type": "string", "default": "iAquaLink", "required": true},
+      "username": {"title": "iAquaLink Email", "type": "string", "required": true},
+      "password": {"title": "iAquaLink Password", "type": "string", "required": true},
+      "hapEnabled": {"title": "Enable HomeKit/HAP", "type": "boolean", "default": true},
+      "matterEnabled": {"title": "Enable Matter", "type": "boolean", "default": true},
+      "enableCloudControl": {
+        "title": "Enable Cloud Control",
+        "description": "Allow HomeKit and Matter to send commands to real pool equipment.",
+        "type": "boolean",
+        "default": false
+      },
+      "pollIntervalSeconds": {"title": "Polling Interval", "type": "integer", "minimum": 15, "maximum": 300, "default": 30},
+      "diagnosticMode": {"title": "Diagnostic Logging", "type": "boolean", "default": false},
+      "optimisticUpdates": {"title": "Optimistic Updates", "type": "boolean", "default": true},
+      "restoreLastLightProgram": {"title": "Restore Last Light Program", "type": "boolean", "default": true},
+      "exposeLightShows": {"title": "Expose Light Shows as Switches", "type": "boolean", "default": true},
+      "poolLightProgram": {
+        "title": "Pool Light Program",
+        "type": "string",
+        "default": "Caribbean Blue",
+        "enum": ["Alpine White", "Sky Blue", "Cobalt Blue", "Caribbean Blue", "Spring Green", "Emerald Green", "Emerald Rose", "Magenta", "Violet", "Slow Color Splash", "Fast Color Splash", "America The Beautiful", "Fat Tuesday", "Disco Tech"]
+      },
+      "spaLightProgram": {
+        "title": "Spa Light Program",
+        "type": "string",
+        "default": "Caribbean Blue",
+        "enum": ["Alpine White", "Sky Blue", "Cobalt Blue", "Caribbean Blue", "Spring Green", "Emerald Green", "Emerald Rose", "Magenta", "Violet", "Slow Color Splash", "Fast Color Splash", "America The Beautiful", "Fat Tuesday", "Disco Tech"]
+      },
+      "useMockApi": {"title": "Use Mock API (Development Only)", "type": "boolean", "default": false}
+    }
+  },
+  "layout": [
+    "name", "username", "password", "hapEnabled", "matterEnabled", "enableCloudControl", "pollIntervalSeconds",
+    "optimisticUpdates", "restoreLastLightProgram", "exposeLightShows",
+    "poolLightProgram", "spaLightProgram", "diagnosticMode", "useMockApi"
+  ]
+}

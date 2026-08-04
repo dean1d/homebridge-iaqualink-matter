@@ -1,0 +1,28 @@
+{
+  "onetouch": "false",
+  "home_screen": [
+    {"status": "online"},
+    {"system_type": "RS4 Combo"},
+    {"temp_scale": "F"},
+    {"air_temp": "93"},
+    {"pool_temp": "85"},
+    {"spa_temp": "86"},
+    {"pool_set_point": "82"},
+    {"spa_set_point": "102"},
+    {"pool_heater": "0"},
+    {"spa_heater": "1"},
+    {"pool_pump": "1"},
+    {"spa_pump": "0"},
+    {"swg_status": "Standby"},
+    {"swg": "0"},
+    {
+      "heatpump_info": {
+        "isheatpumpPresent": "true",
+        "heatpumpstatus": "1",
+        "heatpumpmode": "heat",
+        "isChillAvailable": "true"
+      }
+    },
+    {"pool_chill_set_point": "86"}
+  ]
+}

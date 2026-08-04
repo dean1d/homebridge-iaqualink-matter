@@ -1,0 +1,12 @@
+node_modules/
+.npm-cache/
+dist/
+coverage/
+*.log
+.env
+.DS_Store
+test/hbConfig/persist/
+test/hbConfig/accessories/
+test/hbConfig/auth.json
+test/hbConfig/config.json
+test/hbConfig/matter/

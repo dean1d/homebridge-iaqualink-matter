@@ -1,0 +1,7 @@
+src/
+test/
+.vscode/
+.github/
+docs/
+examples/
+*.zip

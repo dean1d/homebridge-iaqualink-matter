@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Homebridge iAquaLink: Build + Run",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run watch"
+    }
+  ]
+}

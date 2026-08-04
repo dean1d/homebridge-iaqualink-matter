@@ -1,0 +1,10 @@
+{
+  "session_id": "fixture-session",
+  "authentication_token": "fixture-authentication-token",
+  "id": 100,
+  "country": "US",
+  "userPoolOAuth": {
+    "IdToken": "fixture-id-token",
+    "RefreshToken": "fixture-refresh-token"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "platform": "iAquaLink",
+  "name": "iAquaLink",
+  "username": "pool-owner@example.com",
+  "password": "enter-in-homebridge-ui",
+  "hapEnabled": true,
+  "matterEnabled": true,
+  "enableCloudControl": false,
+  "pollIntervalSeconds": 30,
+  "optimisticUpdates": true,
+  "restoreLastLightProgram": true,
+  "exposeLightShows": true,
+  "poolLightProgram": "Caribbean Blue",
+  "spaLightProgram": "Caribbean Blue",
+  "diagnosticMode": false,
+  "useMockApi": false
+}
