@@ -1,5 +1,11 @@
 # homebridge-iAqualink-Matter
 
+<p align="center">
+  <img src="assets/Jandy.png" alt="Jandy iAquaLink logo" width="180" />
+</p>
+
+> This independent community plugin is not affiliated with or endorsed by Jandy or Fluidra.
+
 Homebridge 2 platform plugin for Jandy iAquaLink pool and spa controllers. It discovers supported equipment from the iAquaLink cloud and publishes it to HomeKit/HAP and Matter.
 
 > This is an early release tested with an RS4 Combo system. iAquaLink systems vary by controller and installed equipment, so enable cloud control carefully and test one command at a time.
@@ -13,7 +19,7 @@ Homebridge 2 platform plugin for Jandy iAquaLink pool and spa controllers. It di
 - Pool and spa light power controls
 - Jandy color and light-show programs as one-second momentary switches
 - Separate HomeKit/HAP and Matter publication
-- Serialized cloud commands, polling, retries, and temporary optimistic state while iAquaLink updates
+- Serialized cloud commands, polling, retries, and temporary setpoint confirmation while iAquaLink updates
 - Sanitized diagnostic snapshots that exclude credentials and account identifiers
 - Read-only salt-water chlorinator status when reported by the controller
 
@@ -46,9 +52,7 @@ The recommended configuration method is the Homebridge UI. A minimal manual conf
       "name": "iAquaLink",
       "username": "your-account@example.com",
       "password": "your-password",
-      "hapEnabled": true,
-      "matterEnabled": true,
-      "enableCloudControl": false,
+      "enableCloudControl": true,
       "pollIntervalSeconds": 30
     }
   ]
@@ -59,11 +63,9 @@ The recommended configuration method is the Homebridge UI. A minimal manual conf
 | --- | --- | --- |
 | `username` | — | Email address used by the iAquaLink account. |
 | `password` | — | iAquaLink account password. |
-| `hapEnabled` | `true` | Publish HomeKit/HAP accessories. |
-| `matterEnabled` | `true` | Publish Matter accessories when Matter is enabled in Homebridge. |
-| `enableCloudControl` | `true` | Permit commands that change real pool equipment. Leave disabled for monitoring only. |
+| `enableCloudControl` | `true` | Permit commands that change real pool equipment. Disable for monitoring only. |
 | `pollIntervalSeconds` | `30` | Cloud polling interval from 15 to 300 seconds. |
-| `exposeLightShows` | `true` | Expose Jandy light programs as momentary switches. |
+| `exposeLightShows` | `true` | Expose each discovered Jandy light color and show as a momentary HomeKit switch. Disable for a simpler HomeKit layout. |
 | `poolLightProgram` | `Caribbean Blue` | Program selected when the Matter pool light is turned on.  Matter does not currently support multiple switches under one device, so you must sellect a default light color if you are using Matter to turn the light on and off. |
 | `spaLightProgram` | `Caribbean Blue` | Program selected when the Matter spa light is turned on. Matter does not currently support multiple switches under one device, so you must sellect a default light color if you are using Matter to turn the light on and off. |
 | `diagnosticMode` | `false` | Log sanitized equipment snapshots for troubleshooting. |
@@ -71,9 +73,11 @@ The recommended configuration method is the Homebridge UI. A minimal manual conf
 
 ## Cloud control
 
-Cloud writes are disabled until `enableCloudControl` is set to `true`. Once enabled, the plugin can control discovered pumps, heaters, the heat pump/chiller, mapped auxiliaries, and Jandy lights.
+Cloud writes are enabled by default, allowing the plugin to control discovered pumps, heaters, the heat pump/chiller, mapped auxiliaries, and Jandy lights. Set `enableCloudControl` to `false` for monitoring only.
 
 Test commands individually after enabling control. The plugin uses undocumented cloud endpoints that may behave differently across controller models. The salt-water chlorinator remains read-only because no verified write command is available.
+
+After the cloud accepts a temperature change, iAquaLink may still return the previous setpoint for one or more polls. The plugin temporarily retains the accepted setpoint for at least 60 seconds (or two polling intervals) so HomeKit and Matter do not jump back to stale values. This command-confirmation behavior is automatic and does not need a separate setting.
 
 ## Thermostats
 
@@ -86,13 +90,15 @@ When Pool Heater and Heat Pump / Chiller setpoints are too close, the plugin mai
 
 ## Lights
 
-The primary **Light** control mirrors the iAquaLink on/off state. Each discovered Jandy color or show appears as a momentary switch. Pressing a program switch sends that selection and returns the switch to Off after one second.
+The primary **Light** control mirrors the iAquaLink on/off state. When `exposeLightShows` is enabled, each discovered Jandy color or show appears as a momentary HomeKit switch. Pressing a program switch sends that selection and returns the switch to Off after one second. Disable the option to keep only the primary light control.
 
 Matter does not provide the same list of vendor-specific light programs. Use `poolLightProgram` and `spaLightProgram` to choose the program used when a Matter light is turned on.
 
 ## HomeKit and Matter
 
-HomeKit/HAP and Matter can be enabled independently. Enabling both and commissioning both bridges into Apple Home may create duplicate controls. I would suggest HAP for Homekit and Matter for Alexa/Google
+Homebridge bridge settings determine which protocols are active. HAP accessories are available whenever HAP is enabled for the main or child bridge. Matter accessories are published only when Matter is enabled for that bridge; no additional plugin checkbox is required.
+
+If both protocols are enabled and both pairings are commissioned into the same controller, duplicate controls may appear. A typical setup uses HAP for Apple Home and the Matter pairing for Alexa, Google Home, or another Matter controller. Disabling an unused protocol at the Homebridge child-bridge level also avoids its publication overhead.
 
 Matter support requires a Matter-capable Homebridge 2 installation. Heating-only and cooling-only thermostat capabilities are declared separately so compatible Matter controllers can show only the applicable modes.
 

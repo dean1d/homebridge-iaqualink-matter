@@ -30,7 +30,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     this.provider = config.useMockApi
       ? new MockIAquaLinkProvider()
       : new CloudIAquaLinkProvider(log, config.username, config.password, {
-          enableCloudControl: config.enableCloudControl === true,
+          enableCloudControl: config.enableCloudControl !== false,
         });
     this.matterPublisher = new MatterPublisher(api, log, {
       setPower: (id, on) => this.setPower(id, on),
@@ -181,25 +181,21 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
   }
 
   private discover(equipment: EquipmentState[]): void {
-    if (this.config.hapEnabled !== false) {
-      for (const item of equipment) {
-        const uuid = this.api.hap.uuid.generate(`iaqualink:${item.id}`);
-        let accessory = this.cachedAccessories.find((candidate) => candidate.UUID === uuid);
-        if (!accessory) {
-          accessory = new this.api.platformAccessory(item.name, uuid);
-          accessory.context.equipmentId = item.id;
-          this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-        }
-        this.handlers.set(item.id, new HapEquipmentAccessory(this, accessory, item));
+    for (const item of equipment) {
+      const uuid = this.api.hap.uuid.generate(`iaqualink:${item.id}`);
+      let accessory = this.cachedAccessories.find((candidate) => candidate.UUID === uuid);
+      if (!accessory) {
+        accessory = new this.api.platformAccessory(item.name, uuid);
+        accessory.context.equipmentId = item.id;
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
-      const valid = new Set(equipment.map((item) => this.api.hap.uuid.generate(`iaqualink:${item.id}`)));
-      const stale = this.cachedAccessories.filter((accessory) => !valid.has(accessory.UUID));
-      if (stale.length) this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
+      this.handlers.set(item.id, new HapEquipmentAccessory(this, accessory, item));
     }
-    if (this.config.matterEnabled !== false) {
-      this.matterPublisher.publish(equipment);
-      void this.matterPublisher.update(equipment);
-    }
+    const valid = new Set(equipment.map((item) => this.api.hap.uuid.generate(`iaqualink:${item.id}`)));
+    const stale = this.cachedAccessories.filter((accessory) => !valid.has(accessory.UUID));
+    if (stale.length) this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
+    this.matterPublisher.publish(equipment);
+    void this.matterPublisher.update(equipment);
   }
 
   private async shutdown(): Promise<void> {

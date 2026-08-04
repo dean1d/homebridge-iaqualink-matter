@@ -6,13 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-08-04
+
 ### Added
+
+- Jandy logo branding in the Homebridge configuration screen and README.
+- Documentation for automatic setpoint confirmation while iAquaLink cloud polls catch up.
 
 ### Changed
 
-### Fixed
+- Renamed the project to `homebridge-iAqualink-Matter`; the npm and Homebridge plugin identifier is `homebridge-iaqualink-matter`.
+- Cloud control now defaults to enabled. Set `enableCloudControl` to `false` for monitoring-only operation.
+- Homebridge bridge configuration is now the single source of truth for HAP and Matter publication.
+- Renamed the light-program option to **Expose Light Colors and Shows as Switches** and clarified that it affects HomeKit only.
 
-### Security
+### Removed
+
+- Redundant plugin-level HAP and Matter enable switches; configure protocols on the Homebridge main or child bridge instead.
+- The unused **Optimistic Updates** setting; stale-poll protection remains automatic.
+- The nonfunctional **Restore Last Light Program** setting. Pool and spa lights use their configured default programs when switched on.
 
 ## [0.1.1] - 2026-08-04
 
@@ -55,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/releases/tag/v0.1.0

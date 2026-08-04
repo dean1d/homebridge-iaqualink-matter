@@ -3,13 +3,9 @@ import type { PlatformConfig } from 'homebridge';
 export interface IAquaLinkConfig extends PlatformConfig {
   username: string;
   password: string;
-  hapEnabled?: boolean;
-  matterEnabled?: boolean;
   enableCloudControl?: boolean;
   pollIntervalSeconds?: number;
   diagnosticMode?: boolean;
-  optimisticUpdates?: boolean;
-  restoreLastLightProgram?: boolean;
   exposeLightShows?: boolean;
   poolLightProgram?: string;
   spaLightProgram?: string;

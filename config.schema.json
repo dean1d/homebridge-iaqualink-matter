@@ -2,25 +2,27 @@
   "pluginAlias": "iAquaLink",
   "pluginType": "platform",
   "singular": true,
+  "headerDisplay": "<p align=\"center\"><img src=\"https://raw.githubusercontent.com/dean1d/homebridge-iAqualink-Matter/main/assets/Jandy.png\" alt=\"Jandy iAquaLink logo\" width=\"180\"></p>\n\nControl supported Jandy iAquaLink pool equipment through HomeKit and Matter.\n\n> This independent community plugin is not affiliated with or endorsed by Jandy or Fluidra.",
   "schema": {
     "type": "object",
     "properties": {
       "name": {"title": "Name", "type": "string", "default": "iAquaLink", "required": true},
       "username": {"title": "iAquaLink Email", "type": "string", "required": true},
       "password": {"title": "iAquaLink Password", "type": "string", "required": true},
-      "hapEnabled": {"title": "Enable HomeKit/HAP", "type": "boolean", "default": true},
-      "matterEnabled": {"title": "Enable Matter", "type": "boolean", "default": true},
       "enableCloudControl": {
         "title": "Enable Cloud Control",
         "description": "Allow HomeKit and Matter to send commands to real pool equipment.",
         "type": "boolean",
-        "default": false
+        "default": true
       },
       "pollIntervalSeconds": {"title": "Polling Interval", "type": "integer", "minimum": 15, "maximum": 300, "default": 30},
       "diagnosticMode": {"title": "Diagnostic Logging", "type": "boolean", "default": false},
-      "optimisticUpdates": {"title": "Optimistic Updates", "type": "boolean", "default": true},
-      "restoreLastLightProgram": {"title": "Restore Last Light Program", "type": "boolean", "default": true},
-      "exposeLightShows": {"title": "Expose Light Shows as Switches", "type": "boolean", "default": true},
+      "exposeLightShows": {
+        "title": "Expose Light Colors and Shows as Switches",
+        "description": "Add a momentary HomeKit switch for each discovered Jandy light color and show.",
+        "type": "boolean",
+        "default": true
+      },
       "poolLightProgram": {
         "title": "Pool Light Program",
         "type": "string",
@@ -37,8 +39,8 @@
     }
   },
   "layout": [
-    "name", "username", "password", "hapEnabled", "matterEnabled", "enableCloudControl", "pollIntervalSeconds",
-    "optimisticUpdates", "restoreLastLightProgram", "exposeLightShows",
+    "name", "username", "password", "enableCloudControl", "pollIntervalSeconds",
+    "exposeLightShows",
     "poolLightProgram", "spaLightProgram", "diagnosticMode", "useMockApi"
   ]
 }
