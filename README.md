@@ -5,6 +5,8 @@
 </p>
 
 [![verified-by-homebridge](https://img.shields.io/badge/homebridge-verified-blueviolet?color=%23491F59&style=for-the-badge&logoColor=%23FFFFFF&logo=homebridge)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+[![npm downloads per week](https://img.shields.io/npm/dw/homebridge-iaqualink-matter)](https://www.npmjs.com/package/homebridge-iaqualink-matter)
+[![npm total downloads](https://img.shields.io/npm/dt/homebridge-iaqualink-matter)](https://www.npmjs.com/package/homebridge-iaqualink-matter)
 
 > This independent community plugin is not affiliated with or endorsed by Jandy or Fluidra.
 
