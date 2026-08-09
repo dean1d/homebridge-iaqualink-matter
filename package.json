@@ -1,6 +1,6 @@
 {
   "name": "homebridge-iaqualink-matter",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "Homebridge 2 dynamic platform plugin for Jandy iAquaLink with HAP and Matter support.",
   "license": "Apache-2.0",
   "main": "dist/index.js",
@@ -31,6 +31,20 @@
     "url": "https://github.com/dean1d/homebridge-iAqualink-Matter/issues"
   },
   "homepage": "https://github.com/dean1d/homebridge-iAqualink-Matter#readme",
+  "funding": [
+    {
+      "type": "buymeacoffee",
+      "url": "https://buymeacoffee.com/dean1d"
+    },
+    {
+      "type": "cashapp",
+      "url": "https://cash.app/$dkoenigBOA"
+    },
+    {
+      "type": "venmo",
+      "url": "https://venmo.com/u/Dean1d"
+    }
+  ],
   "files": [
     "dist",
     "assets",

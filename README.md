@@ -4,6 +4,8 @@
   <img src="assets/Jandy.png" alt="Jandy iAquaLink logo" width="180" />
 </p>
 
+[![verified-by-homebridge](https://img.shields.io/badge/homebridge-verified-blueviolet?color=%23491F59&style=for-the-badge&logoColor=%23FFFFFF&logo=homebridge)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+
 > This independent community plugin is not affiliated with or endorsed by Jandy or Fluidra.
 
 Homebridge 2 platform plugin for Jandy iAquaLink pool and spa controllers. It discovers supported equipment from the iAquaLink cloud and publishes it to HomeKit/HAP and Matter.
