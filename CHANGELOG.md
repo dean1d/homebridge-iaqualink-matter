@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
-## [1.0.1-beta.5] - 2026-08-12
+## [1.0.1-beta.6] - 2026-08-12
 
 ### Changed
 
