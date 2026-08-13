@@ -149,7 +149,7 @@ export class MatterPublisher {
         devices.ThermostatRequirements.ThermostatServer.with('Cooling', 'Occupancy'),
       );
     }
-    if (item.kind === 'switch') return types.OnOffOutlet;
+    if (item.kind === 'switch') return types.OnOffSwitch;
     return undefined;
   }
 

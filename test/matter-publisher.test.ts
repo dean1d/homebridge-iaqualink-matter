@@ -30,7 +30,7 @@ describe('associateMatterAccessory', () => {
         deviceTypes: {
           TemperatureSensor: {},
           Thermostat: {},
-          OnOffOutlet: {},
+          OnOffSwitch: {},
         },
         registerPlatformAccessories,
         unregisterPlatformAccessories: vi.fn().mockResolvedValue(undefined),

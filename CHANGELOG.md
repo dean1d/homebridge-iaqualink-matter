@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
+## [1.0.1-beta.4] - 2026-08-12
+
+### Changed
+
+- Experimentally publish on/off equipment as Matter On/Off Light Switch devices instead of plug-in units.
+
 ## [1.0.1-beta.3] - 2026-08-12
 
 ### Fixed
