@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
+## [1.0.1-beta.3] - 2026-08-12
+
+### Fixed
+
+- Declare heating-only and cooling-only Matter thermostat features through Homebridge's supported thermostat requirements API.
+
 ## [1.0.1-beta.2] - 2026-08-12
 
 ### Fixed

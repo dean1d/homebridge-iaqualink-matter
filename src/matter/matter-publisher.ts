@@ -1,3 +1,4 @@
+import { devices } from 'homebridge';
 import type { API, Logger, MatterAccessory } from 'homebridge';
 import type { EquipmentState } from '../types.js';
 import { PLUGIN_NAME, PLATFORM_NAME } from '../settings.js';
@@ -138,7 +139,16 @@ export class MatterPublisher {
     const types = this.api.matter!.deviceTypes;
     if (item.kind === 'temperature') return types.TemperatureSensor;
     if (item.kind === 'light') return types.OnOffLight;
-    if (item.kind === 'thermostat' || item.kind === 'heat-cool-thermostat') return types.Thermostat;
+    if (item.kind === 'thermostat') {
+      return devices.ThermostatDevice.with(
+        devices.ThermostatRequirements.ThermostatServer.with('Heating', 'Occupancy'),
+      );
+    }
+    if (item.kind === 'heat-cool-thermostat') {
+      return devices.ThermostatDevice.with(
+        devices.ThermostatRequirements.ThermostatServer.with('Cooling', 'Occupancy'),
+      );
+    }
     if (item.kind === 'switch') return types.OnOffOutlet;
     return undefined;
   }
