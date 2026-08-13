@@ -6,9 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-12
+
 ### Added
 
 - Weekly and total npm download badges in the README.
+
+### Changed
+
+- Publish controllable on/off equipment as Matter plug-in units for compatibility with Alexa and other Matter controllers.
+- Validate releases against Homebridge 2.3.1.
+
+### Fixed
+
+- Preserve Matter accessory plugin and platform ownership so devices remain associated with iAquaLink after Homebridge restarts.
+- Register Matter accessories independently so one unsupported endpoint cannot prevent later devices from appearing.
+- Publish Pool Heater and Spa Heater as heating-only Matter thermostats and Heat Pump / Chiller as a cooling-only thermostat.
+- Remove obsolete Matter thermostat preset attributes rejected by Homebridge 2.3.1.
+- Include the affected device name in Matter registration failure logs.
 
 ## [1.0.1-beta.7] - 2026-08-12
 
