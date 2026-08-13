@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
+## [1.0.1-beta.1] - 2026-08-12
+
+### Fixed
+
+- Use Homebridge's supported precomposed Matter thermostat device type instead of accessing an unavailable nested behavior during startup.
+
 ## [1.0.1-beta.0] - 2026-08-12
 
 ### Fixed

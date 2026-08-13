@@ -128,14 +128,7 @@ export class MatterPublisher {
     const types = this.api.matter!.deviceTypes;
     if (item.kind === 'temperature') return types.TemperatureSensor;
     if (item.kind === 'light') return types.OnOffLight;
-    if (item.kind === 'thermostat') {
-      const heatingOnly = types.Thermostat.behaviors.thermostat.with('Heating', 'Occupancy');
-      return types.Thermostat.with(heatingOnly);
-    }
-    if (item.kind === 'heat-cool-thermostat') {
-      const coolingOnly = types.Thermostat.behaviors.thermostat.with('Cooling', 'Occupancy');
-      return types.Thermostat.with(coolingOnly);
-    }
+    if (item.kind === 'thermostat' || item.kind === 'heat-cool-thermostat') return types.Thermostat;
     if (item.kind === 'switch') return types.OnOffOutlet;
     return undefined;
   }
