@@ -88,10 +88,20 @@ export class MatterPublisher {
       legacyAccessories,
     ).catch((error) => {
       this.log.debug(`Legacy Matter endpoint cleanup skipped: ${error instanceof Error ? error.message : String(error)}`);
-    }).then(() => this.api.matter!.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, accessories))
-      .then(() => {
-        this.log.info(`Registered ${accessories.length} Matter accessories.`);
-      })
+    }).then(async () => {
+      let registered = 0;
+      for (const accessory of accessories) {
+        try {
+          await this.api.matter!.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          registered++;
+        } catch (error) {
+          this.log.warn(
+            `Matter accessory registration failed for ${accessory.displayName}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+      this.log.info(`Registered ${registered} of ${accessories.length} Matter accessories.`);
+    })
       .catch((error) => {
         this.log.warn(`Matter accessory registration failed: ${error instanceof Error ? error.message : String(error)}`);
       });
