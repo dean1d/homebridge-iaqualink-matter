@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
+## [1.0.1-beta.7] - 2026-08-12
+
+### Fixed
+
+- Remove thermostat preset attributes that Homebridge 2.3.1 rejects when the Matter Presets feature is not enabled.
+
 ## [1.0.1-beta.6] - 2026-08-12
 
 ### Changed

@@ -178,17 +178,6 @@ export class MatterPublisher {
     if (heatCool) {
       return {
         localTemperature: localTemperatureC === undefined ? null : Math.round(localTemperatureC * 100),
-        // Homebridge's writable thermostat behavior inherits the Matter
-        // Presets feature, even for a cooling-only device. Supply its required
-        // metadata without exposing an active preset.
-        presetTypes: [{
-          presetScenario: 1,
-          numberOfPresets: 1,
-          presetTypeFeatures: { automatic: false, supportsNames: false },
-        }],
-        numberOfPresets: 1,
-        activePresetHandle: null,
-        presets: [],
         // Matter enum: CoolingOnly=0.
         controlSequenceOfOperation: 0,
         systemMode,
@@ -220,27 +209,6 @@ export class MatterPublisher {
     }
     return {
       localTemperature: localTemperatureC === undefined ? null : Math.round(localTemperatureC * 100),
-      // Homebridge's writable heating thermostat also inherits Presets.
-      presetTypes: [{
-        presetScenario: 1,
-        numberOfPresets: 1,
-        presetTypeFeatures: { automatic: false, supportsNames: false },
-      }],
-      numberOfPresets: 1,
-      activePresetHandle: null,
-      presets: [],
-      ...(heatCool ? {
-        // Homebridge 2.2.1's writable thermostat behavior inherits the Matter
-        // Presets feature. Supply mandatory metadata without active presets.
-        presetTypes: [{
-          presetScenario: 1,
-          numberOfPresets: 1,
-          presetTypeFeatures: { automatic: false, supportsNames: false },
-        }],
-        numberOfPresets: 1,
-        activePresetHandle: null,
-        presets: [],
-      } : {}),
       // Matter enum: CoolingOnly=0, HeatingOnly=2.
       controlSequenceOfOperation: heatCool ? 0 : 2,
       systemMode,

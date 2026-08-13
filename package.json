@@ -1,6 +1,6 @@
 {
   "name": "homebridge-iaqualink-matter",
-  "version": "1.0.1-beta.6",
+  "version": "1.0.1-beta.7",
   "description": "Homebridge 2 dynamic platform plugin for Jandy iAquaLink with HAP and Matter support.",
   "license": "Apache-2.0",
   "main": "dist/index.js",
@@ -64,12 +64,11 @@
     "check": "npm run lint && npm run build && npm test",
     "prepublishOnly": "npm run check"
   },
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
-    "homebridge": "^2.0.0",
+    "homebridge": "^2.3.1",
     "nodemon": "^3.1.0",
     "rimraf": "^6.0.0",
     "typescript": "^5.8.0",
