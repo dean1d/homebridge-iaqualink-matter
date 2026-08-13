@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
+## [1.0.1-beta.5] - 2026-08-12
+
+### Changed
+
+- Revert the experimental Matter On/Off Light Switch mapping because controllers such as Alexa treat it as an input device rather than a controllable load.
+
 ## [1.0.1-beta.4] - 2026-08-12
 
 ### Changed

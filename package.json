@@ -1,6 +1,6 @@
 {
   "name": "homebridge-iaqualink-matter",
-  "version": "1.0.1-beta.4",
+  "version": "1.0.1-beta.5",
   "description": "Homebridge 2 dynamic platform plugin for Jandy iAquaLink with HAP and Matter support.",
   "license": "Apache-2.0",
   "main": "dist/index.js",
