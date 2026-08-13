@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Weekly and total npm download badges in the README.
 
+## [1.0.1-beta.0] - 2026-08-12
+
+### Fixed
+
+- Preserve Matter accessory plugin and platform ownership in the Homebridge 2.2.1 cache so bridged devices are not removed as orphaned after a restart.
+
 ## [1.0.0] - 2026-08-08
 
 ### Added

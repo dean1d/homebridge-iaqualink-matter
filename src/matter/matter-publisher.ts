@@ -9,6 +9,20 @@ interface MatterCommands {
   setThermostatMode(id: EquipmentState['id'], mode: 'off' | 'heat' | 'cool' | 'auto'): Promise<void>;
 }
 
+type OwnedMatterAccessory = MatterAccessory & {
+  _associatedPlugin?: string;
+  _associatedPlatform?: string;
+};
+
+export function associateMatterAccessory(accessory: MatterAccessory): MatterAccessory {
+  // Homebridge 2.2.1 does not persist the registration arguments into its
+  // Matter cache, so supply the internal ownership fields it serializes.
+  const ownedAccessory = accessory as OwnedMatterAccessory;
+  ownedAccessory._associatedPlugin = PLUGIN_NAME;
+  ownedAccessory._associatedPlatform = PLATFORM_NAME;
+  return accessory;
+}
+
 export class MatterPublisher {
   private registration?: Promise<void>;
   private readonly states = new Map<EquipmentState['id'], EquipmentState>();
@@ -29,7 +43,7 @@ export class MatterPublisher {
     const accessories: MatterAccessory[] = equipment.flatMap((item) => {
       const deviceType = this.deviceType(item);
       if (!deviceType) return [];
-      return [{
+      return [associateMatterAccessory({
         UUID: this.matterUuid(item.id),
         displayName: item.name,
         deviceType,
@@ -39,7 +53,7 @@ export class MatterPublisher {
         context: { equipmentId: item.id },
         clusters: this.clusters(item),
         handlers: this.handlers(item),
-      }];
+      })];
     });
 
     const legacyAccessories = accessories.flatMap((accessory) => [
