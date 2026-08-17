@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-08-16
+
+### Fixed
+
+- Register the complete Matter topology atomically and in stable equipment-ID order, preventing Alexa from treating temporarily absent equipment as removed and recreated devices and losing group or routine assignments.
+
 ## [1.0.1] - 2026-08-12
 
 ### Added
@@ -141,7 +147,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.3...v1.0.0
 [0.1.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v0.1.1...v0.1.2

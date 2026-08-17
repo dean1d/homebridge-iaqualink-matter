@@ -15,14 +15,9 @@ describe('associateMatterAccessory', () => {
     expect(accessory._associatedPlatform).toBe('iAquaLink');
   });
 
-  it('continues after an individual accessory registration fails', async () => {
-    const registerPlatformAccessories = vi.fn(async (
-      _plugin: string,
-      _platform: string,
-      accessories: MatterAccessory[],
-    ) => {
-      if (accessories[0]?.displayName === 'Pool Heater') throw new Error('invalid thermostat');
-    });
+  it('registers a complete, deterministic Matter topology in one call', async () => {
+    const onOffOutlet = {};
+    const registerPlatformAccessories = vi.fn().mockResolvedValue(undefined);
     const api = {
       isMatterEnabled: () => true,
       hap: { uuid: { generate: (value: string) => value } },
@@ -30,7 +25,7 @@ describe('associateMatterAccessory', () => {
         deviceTypes: {
           TemperatureSensor: {},
           Thermostat: {},
-          OnOffOutlet: {},
+          OnOffOutlet: onOffOutlet,
         },
         registerPlatformAccessories,
         unregisterPlatformAccessories: vi.fn().mockResolvedValue(undefined),
@@ -55,10 +50,31 @@ describe('associateMatterAccessory', () => {
 
     new MatterPublisher(api, log, commands).publish(equipment);
 
-    await vi.waitFor(() => expect(registerPlatformAccessories).toHaveBeenCalledTimes(3));
-    expect(registerPlatformAccessories.mock.calls.map((call) => call[2][0]?.displayName))
-      .toEqual(['Pool Temperature', 'Pool Heater', 'Filter Pump']);
-    expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('Pool Heater'));
-    expect(log.info).toHaveBeenCalledWith('Registered 2 of 3 Matter accessories.');
+    await vi.waitFor(() => expect(registerPlatformAccessories).toHaveBeenCalledTimes(1));
+    const [plugin, platform, accessories] = registerPlatformAccessories.mock.calls[0]!;
+    expect(plugin).toBe('homebridge-iaqualink-matter');
+    expect(platform).toBe('iAquaLink');
+    expect(accessories).toHaveLength(3);
+    expect(accessories.map((accessory: MatterAccessory) => accessory.context.equipmentId))
+      .toEqual(['filter-pump', 'pool-heater', 'pool-temperature']);
+    expect(accessories.map((accessory: MatterAccessory) => accessory.UUID)).toEqual([
+      'iaqualink:matter:v7:filter-pump',
+      'iaqualink:matter:v7:pool-heater',
+      'iaqualink:matter:v7:pool-temperature',
+    ]);
+
+    const filterPump = accessories[0] as MatterAccessory & {
+      _associatedPlugin?: string;
+      _associatedPlatform?: string;
+    };
+    expect(filterPump.deviceType).toBe(onOffOutlet);
+    expect(filterPump._associatedPlugin).toBe('homebridge-iaqualink-matter');
+    expect(filterPump._associatedPlatform).toBe('iAquaLink');
+    expect(accessories.every((accessory: MatterAccessory & {
+      _associatedPlugin?: string;
+      _associatedPlatform?: string;
+    }) => accessory._associatedPlugin === 'homebridge-iaqualink-matter'
+      && accessory._associatedPlatform === 'iAquaLink')).toBe(true);
+    expect(log.info).toHaveBeenCalledWith('Registered 3 Matter accessories.');
   });
 });

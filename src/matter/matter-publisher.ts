@@ -41,21 +41,23 @@ export class MatterPublisher {
     }
     for (const item of equipment) this.states.set(item.id, item);
 
-    const accessories: MatterAccessory[] = equipment.flatMap((item) => {
-      const deviceType = this.deviceType(item);
-      if (!deviceType) return [];
-      return [associateMatterAccessory({
-        UUID: this.matterUuid(item.id),
-        displayName: item.name,
-        deviceType,
-        manufacturer: 'Jandy',
-        model: item.kind,
-        serialNumber: item.id,
-        context: { equipmentId: item.id },
-        clusters: this.clusters(item),
-        handlers: this.handlers(item),
-      })];
-    });
+    const accessories: MatterAccessory[] = [...equipment]
+      .sort((left, right) => String(left.id) < String(right.id) ? -1 : String(left.id) > String(right.id) ? 1 : 0)
+      .flatMap((item) => {
+        const deviceType = this.deviceType(item);
+        if (!deviceType) return [];
+        return [associateMatterAccessory({
+          UUID: this.matterUuid(item.id),
+          displayName: item.name,
+          deviceType,
+          manufacturer: 'Jandy',
+          model: item.kind,
+          serialNumber: item.id,
+          context: { equipmentId: item.id },
+          clusters: this.clusters(item),
+          handlers: this.handlers(item),
+        })];
+      });
 
     const legacyAccessories = accessories.flatMap((accessory) => [
       {
@@ -90,18 +92,12 @@ export class MatterPublisher {
     ).catch((error) => {
       this.log.debug(`Legacy Matter endpoint cleanup skipped: ${error instanceof Error ? error.message : String(error)}`);
     }).then(async () => {
-      let registered = 0;
-      for (const accessory of accessories) {
-        try {
-          await this.api.matter!.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-          registered++;
-        } catch (error) {
-          this.log.warn(
-            `Matter accessory registration failed for ${accessory.displayName}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
+      if (accessories.length === 0) {
+        this.log.info('Registered 0 Matter accessories.');
+        return;
       }
-      this.log.info(`Registered ${registered} of ${accessories.length} Matter accessories.`);
+      await this.api.matter!.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, accessories);
+      this.log.info(`Registered ${accessories.length} Matter accessories.`);
     })
       .catch((error) => {
         this.log.warn(`Matter accessory registration failed: ${error instanceof Error ? error.message : String(error)}`);
