@@ -15,6 +15,25 @@ type OwnedMatterAccessory = MatterAccessory & {
   _associatedPlatform?: string;
 };
 
+const MATTER_EQUIPMENT_ORDER: EquipmentState['id'][] = [
+  'air-temperature',
+  'pool-temperature',
+  'spa-temperature',
+  'pool-heater',
+  'spa-heater',
+  'filter-pump',
+  'spa-mode',
+  'heat-pump',
+  'swg',
+  'air-blower',
+  'sheer-descent',
+  'high-speed',
+  'pool-light',
+  'spa-light',
+];
+
+const matterEquipmentRank = new Map(MATTER_EQUIPMENT_ORDER.map((id, index) => [id, index]));
+
 export function associateMatterAccessory(accessory: MatterAccessory): MatterAccessory {
   // Homebridge 2.2.1 does not persist the registration arguments into its
   // Matter cache, so supply the internal ownership fields it serializes.
@@ -42,7 +61,8 @@ export class MatterPublisher {
     for (const item of equipment) this.states.set(item.id, item);
 
     const accessories: MatterAccessory[] = [...equipment]
-      .sort((left, right) => String(left.id) < String(right.id) ? -1 : String(left.id) > String(right.id) ? 1 : 0)
+      .sort((left, right) => (matterEquipmentRank.get(left.id) ?? Number.MAX_SAFE_INTEGER)
+        - (matterEquipmentRank.get(right.id) ?? Number.MAX_SAFE_INTEGER))
       .flatMap((item) => {
         const deviceType = this.deviceType(item);
         if (!deviceType) return [];
@@ -235,9 +255,12 @@ export class MatterPublisher {
     if (item.kind === 'switch' || item.kind === 'light') {
       return {
         onOff: {
-          on: () => this.commands.setPower(item.id, true),
-          off: () => this.commands.setPower(item.id, false),
-          toggle: () => this.commands.setPower(item.id, !(this.states.get(item.id)?.on ?? false)),
+          on: () => this.runMatterCommand(item.id, 'power on', () => this.commands.setPower(item.id, true)),
+          off: () => this.runMatterCommand(item.id, 'power off', () => this.commands.setPower(item.id, false)),
+          toggle: () => this.runMatterCommand(item.id, 'power toggle', () => this.commands.setPower(
+            item.id,
+            !(this.states.get(item.id)?.on ?? false),
+          )),
         },
       };
     }
@@ -246,30 +269,38 @@ export class MatterPublisher {
         thermostat: {
           systemModeChange: (args) => {
             const mode = args?.systemMode === 3 ? 'cool' : 'off';
-            return this.commands.setThermostatMode(item.id, mode);
+            return this.runMatterCommand(item.id, `mode ${mode}`, () => this.commands.setThermostatMode(item.id, mode));
           },
-          occupiedCoolingSetpointChange: (args) => this.commands.setCoolingTargetTemperature(
-            item.id,
-            (args?.occupiedCoolingSetpoint ?? 0) / 100,
-          ),
+          occupiedCoolingSetpointChange: (args) => {
+            const temperatureC = (args?.occupiedCoolingSetpoint ?? 0) / 100;
+            return this.runMatterCommand(item.id, `cooling setpoint ${temperatureC}°C`,
+              () => this.commands.setCoolingTargetTemperature(item.id, temperatureC));
+          },
         },
       };
     }
     if (item.kind === 'thermostat') {
       return {
         thermostat: {
-          systemModeChange: (args) => this.commands.setThermostatMode(
-            item.id,
-            args?.systemMode === 4 ? 'heat' : 'off',
-          ),
-          occupiedHeatingSetpointChange: (args) => this.commands.setTargetTemperature(
-            item.id,
-            (args?.occupiedHeatingSetpoint ?? 0) / 100,
-          ),
+          systemModeChange: (args) => {
+            const mode = args?.systemMode === 4 ? 'heat' : 'off';
+            return this.runMatterCommand(item.id, `mode ${mode}`,
+              () => this.commands.setThermostatMode(item.id, mode));
+          },
+          occupiedHeatingSetpointChange: (args) => {
+            const temperatureC = (args?.occupiedHeatingSetpoint ?? 0) / 100;
+            return this.runMatterCommand(item.id, `heating setpoint ${temperatureC}°C`,
+              () => this.commands.setTargetTemperature(item.id, temperatureC));
+          },
         },
       };
     }
     return {};
+  }
+
+  private runMatterCommand(id: EquipmentState['id'], action: string, command: () => Promise<void>): Promise<void> {
+    this.log.info(`Matter command for ${id}: ${action}`);
+    return command();
   }
 
   private matterUuid(id: EquipmentState['id']): string {

@@ -26,6 +26,7 @@ describe('associateMatterAccessory', () => {
           TemperatureSensor: {},
           Thermostat: {},
           OnOffOutlet: onOffOutlet,
+          OnOffLight: {},
         },
         registerPlatformAccessories,
         unregisterPlatformAccessories: vi.fn().mockResolvedValue(undefined),
@@ -43,9 +44,11 @@ describe('associateMatterAccessory', () => {
       setThermostatMode: vi.fn().mockResolvedValue(undefined),
     };
     const equipment: EquipmentState[] = [
-      { id: 'pool-temperature', name: 'Pool Temperature', kind: 'temperature', available: true },
+      { id: 'spa-mode', name: 'Spa Mode', kind: 'switch', available: true },
+      { id: 'spa-light', name: 'Spa Light', kind: 'light', available: true },
       { id: 'pool-heater', name: 'Pool Heater', kind: 'thermostat', available: true },
       { id: 'filter-pump', name: 'Filter Pump', kind: 'switch', available: true },
+      { id: 'pool-temperature', name: 'Pool Temperature', kind: 'temperature', available: true },
     ];
 
     new MatterPublisher(api, log, commands).publish(equipment);
@@ -54,16 +57,18 @@ describe('associateMatterAccessory', () => {
     const [plugin, platform, accessories] = registerPlatformAccessories.mock.calls[0]!;
     expect(plugin).toBe('homebridge-iaqualink-matter');
     expect(platform).toBe('iAquaLink');
-    expect(accessories).toHaveLength(3);
+    expect(accessories).toHaveLength(5);
     expect(accessories.map((accessory: MatterAccessory) => accessory.context.equipmentId))
-      .toEqual(['filter-pump', 'pool-heater', 'pool-temperature']);
+      .toEqual(['pool-temperature', 'pool-heater', 'filter-pump', 'spa-mode', 'spa-light']);
     expect(accessories.map((accessory: MatterAccessory) => accessory.UUID)).toEqual([
-      'iaqualink:matter:v7:filter-pump',
-      'iaqualink:matter:v7:pool-heater',
       'iaqualink:matter:v7:pool-temperature',
+      'iaqualink:matter:v7:pool-heater',
+      'iaqualink:matter:v7:filter-pump',
+      'iaqualink:matter:v7:spa-mode',
+      'iaqualink:matter:v7:spa-light',
     ]);
 
-    const filterPump = accessories[0] as MatterAccessory & {
+    const filterPump = accessories[2] as MatterAccessory & {
       _associatedPlugin?: string;
       _associatedPlatform?: string;
     };
@@ -75,6 +80,19 @@ describe('associateMatterAccessory', () => {
       _associatedPlatform?: string;
     }) => accessory._associatedPlugin === 'homebridge-iaqualink-matter'
       && accessory._associatedPlatform === 'iAquaLink')).toBe(true);
-    expect(log.info).toHaveBeenCalledWith('Registered 3 Matter accessories.');
+    const handlers = Object.fromEntries(accessories.map((accessory: MatterAccessory) => [
+      accessory.context.equipmentId,
+      accessory.handlers,
+    ])) as Record<string, any>;
+    await handlers['filter-pump'].onOff.off();
+    await handlers['spa-mode'].onOff.on();
+    await handlers['spa-light'].onOff.on();
+    await handlers['pool-heater'].thermostat.systemModeChange({ systemMode: 4 });
+    expect(commands.setPower).toHaveBeenNthCalledWith(1, 'filter-pump', false);
+    expect(commands.setPower).toHaveBeenNthCalledWith(2, 'spa-mode', true);
+    expect(commands.setPower).toHaveBeenNthCalledWith(3, 'spa-light', true);
+    expect(commands.setThermostatMode).toHaveBeenCalledWith('pool-heater', 'heat');
+    expect(log.info).toHaveBeenCalledWith('Matter command for spa-mode: power on');
+    expect(log.info).toHaveBeenCalledWith('Registered 5 Matter accessories.');
   });
 });

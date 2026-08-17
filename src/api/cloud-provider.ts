@@ -311,6 +311,9 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
   }
 
   private async sessionCommand(command: string, parameters: Record<string, string> = {}): Promise<JsonObject> {
+    if (!command.startsWith('get_')) {
+      this.log.info(`iAquaLink command: ${command} ${JSON.stringify(parameters)}`);
+    }
     const url = new URL(SESSION_URL);
     url.search = new URLSearchParams({
       ...parameters, actionID: 'command', command, serial: this.systemSerial, sessionID: this.sessionId,
