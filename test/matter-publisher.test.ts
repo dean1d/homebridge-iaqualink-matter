@@ -15,9 +15,10 @@ describe('associateMatterAccessory', () => {
     expect(accessory._associatedPlatform).toBe('iAquaLink');
   });
 
-  it('registers a complete, deterministic Matter topology in one call', async () => {
+  it('submits one complete topology in discovery order and routes commands correctly', async () => {
     const onOffOutlet = {};
     const registerPlatformAccessories = vi.fn().mockResolvedValue(undefined);
+    const unregisterPlatformAccessories = vi.fn().mockResolvedValue(undefined);
     const api = {
       isMatterEnabled: () => true,
       hap: { uuid: { generate: (value: string) => value } },
@@ -29,7 +30,7 @@ describe('associateMatterAccessory', () => {
           OnOffLight: {},
         },
         registerPlatformAccessories,
-        unregisterPlatformAccessories: vi.fn().mockResolvedValue(undefined),
+        unregisterPlatformAccessories,
       },
     } as unknown as API;
     const log = {
@@ -57,18 +58,19 @@ describe('associateMatterAccessory', () => {
     const [plugin, platform, accessories] = registerPlatformAccessories.mock.calls[0]!;
     expect(plugin).toBe('homebridge-iaqualink-matter');
     expect(platform).toBe('iAquaLink');
+    expect(unregisterPlatformAccessories).not.toHaveBeenCalled();
     expect(accessories).toHaveLength(5);
     expect(accessories.map((accessory: MatterAccessory) => accessory.context.equipmentId))
-      .toEqual(['pool-temperature', 'pool-heater', 'filter-pump', 'spa-mode', 'spa-light']);
+      .toEqual(['spa-mode', 'spa-light', 'pool-heater', 'filter-pump', 'pool-temperature']);
     expect(accessories.map((accessory: MatterAccessory) => accessory.UUID)).toEqual([
-      'iaqualink:matter:v7:pool-temperature',
-      'iaqualink:matter:v7:pool-heater',
-      'iaqualink:matter:v7:filter-pump',
       'iaqualink:matter:v7:spa-mode',
       'iaqualink:matter:v7:spa-light',
+      'iaqualink:matter:v7:pool-heater',
+      'iaqualink:matter:v7:filter-pump',
+      'iaqualink:matter:v7:pool-temperature',
     ]);
 
-    const filterPump = accessories[2] as MatterAccessory & {
+    const filterPump = accessories[3] as MatterAccessory & {
       _associatedPlugin?: string;
       _associatedPlatform?: string;
     };
@@ -93,6 +95,6 @@ describe('associateMatterAccessory', () => {
     expect(commands.setPower).toHaveBeenNthCalledWith(3, 'spa-light', true);
     expect(commands.setThermostatMode).toHaveBeenCalledWith('pool-heater', 'heat');
     expect(log.info).toHaveBeenCalledWith('Matter command for spa-mode: power on');
-    expect(log.info).toHaveBeenCalledWith('Registered 5 Matter accessories.');
+    expect(log.info).toHaveBeenCalledWith('Submitted 5 Matter accessories in one topology.');
   });
 });

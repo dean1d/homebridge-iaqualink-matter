@@ -15,25 +15,6 @@ type OwnedMatterAccessory = MatterAccessory & {
   _associatedPlatform?: string;
 };
 
-const MATTER_EQUIPMENT_ORDER: EquipmentState['id'][] = [
-  'air-temperature',
-  'pool-temperature',
-  'spa-temperature',
-  'pool-heater',
-  'spa-heater',
-  'filter-pump',
-  'spa-mode',
-  'heat-pump',
-  'swg',
-  'air-blower',
-  'sheer-descent',
-  'high-speed',
-  'pool-light',
-  'spa-light',
-];
-
-const matterEquipmentRank = new Map(MATTER_EQUIPMENT_ORDER.map((id, index) => [id, index]));
-
 export function associateMatterAccessory(accessory: MatterAccessory): MatterAccessory {
   // Homebridge 2.2.1 does not persist the registration arguments into its
   // Matter cache, so supply the internal ownership fields it serializes.
@@ -60,68 +41,40 @@ export class MatterPublisher {
     }
     for (const item of equipment) this.states.set(item.id, item);
 
-    const accessories: MatterAccessory[] = [...equipment]
-      .sort((left, right) => (matterEquipmentRank.get(left.id) ?? Number.MAX_SAFE_INTEGER)
-        - (matterEquipmentRank.get(right.id) ?? Number.MAX_SAFE_INTEGER))
-      .flatMap((item) => {
-        const deviceType = this.deviceType(item);
-        if (!deviceType) return [];
-        return [associateMatterAccessory({
-          UUID: this.matterUuid(item.id),
-          displayName: item.name,
-          deviceType,
-          manufacturer: 'Jandy',
-          model: item.kind,
-          serialNumber: item.id,
-          context: { equipmentId: item.id },
-          clusters: this.clusters(item),
-          handlers: this.handlers(item),
-        })];
-      });
+    const accessories: MatterAccessory[] = equipment.flatMap((item) => {
+      const deviceType = this.deviceType(item);
+      if (!deviceType) return [];
+      return [associateMatterAccessory({
+        UUID: this.matterUuid(item.id),
+        displayName: item.name,
+        deviceType,
+        manufacturer: 'Jandy',
+        model: item.kind,
+        serialNumber: item.id,
+        context: { equipmentId: item.id },
+        clusters: this.clusters(item),
+        handlers: this.handlers(item),
+      })];
+    });
 
-    const legacyAccessories = accessories.flatMap((accessory) => [
-      {
-        ...accessory,
-        UUID: this.api.hap.uuid.generate(`iaqualink:${accessory.context.equipmentId}`),
-      },
-      {
-        ...accessory,
-        UUID: this.api.hap.uuid.generate(`iaqualink:matter:v2:${accessory.context.equipmentId}`),
-      },
-      {
-        ...accessory,
-        UUID: this.api.hap.uuid.generate(`iaqualink:matter:v3:${accessory.context.equipmentId}`),
-      },
-      {
-        ...accessory,
-        UUID: this.api.hap.uuid.generate(`iaqualink:matter:v4:${accessory.context.equipmentId}`),
-      },
-      {
-        ...accessory,
-        UUID: this.api.hap.uuid.generate(`iaqualink:matter:v5:${accessory.context.equipmentId}`),
-      },
-      {
-        ...accessory,
-        UUID: this.api.hap.uuid.generate(`iaqualink:matter:v6:${accessory.context.equipmentId}`),
-      },
-    ]);
-    this.registration = this.api.matter.unregisterPlatformAccessories(
+    if (accessories.length === 0) {
+      this.log.info('Registered 0 Matter accessories.');
+      this.registration = Promise.resolve();
+      return;
+    }
+    // Homebridge's bridged Matter registration and unregistration methods emit
+    // asynchronous events even though they return promises. Do not run legacy
+    // cleanup during startup: its event can overlap this registration event and
+    // expose or mutate a partial topology. Submit exactly one complete topology.
+    this.registration = this.api.matter.registerPlatformAccessories(
       PLUGIN_NAME,
       PLATFORM_NAME,
-      legacyAccessories,
-    ).catch((error) => {
-      this.log.debug(`Legacy Matter endpoint cleanup skipped: ${error instanceof Error ? error.message : String(error)}`);
-    }).then(async () => {
-      if (accessories.length === 0) {
-        this.log.info('Registered 0 Matter accessories.');
-        return;
-      }
-      await this.api.matter!.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, accessories);
-      this.log.info(`Registered ${accessories.length} Matter accessories.`);
-    })
-      .catch((error) => {
-        this.log.warn(`Matter accessory registration failed: ${error instanceof Error ? error.message : String(error)}`);
-      });
+      accessories,
+    ).then(() => {
+      this.log.info(`Submitted ${accessories.length} Matter accessories in one topology.`);
+    }).catch((error) => {
+      this.log.warn(`Matter accessory registration failed: ${error instanceof Error ? error.message : String(error)}`);
+    });
   }
 
   async update(equipment: EquipmentState[]): Promise<void> {
