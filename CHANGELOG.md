@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.5-beta.0] - 2026-08-19
+
+### Fixed
+
+- Reattach current handlers to Homebridge-restored Matter accessory definitions so child-bridge restarts retain existing endpoint identities instead of making controller-visible devices appear new.
+
 ## [1.0.4] - 2026-08-19
 
 ### Fixed
@@ -159,7 +165,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5-beta.0...HEAD
+[1.0.5-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...v1.0.5-beta.0
 [1.0.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.1...v1.0.2

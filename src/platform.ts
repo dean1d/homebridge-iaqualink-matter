@@ -1,4 +1,4 @@
-import type { API, Characteristic, DynamicPlatformPlugin, Logger, PlatformAccessory, Service } from 'homebridge';
+import type { API, Characteristic, DynamicPlatformPlugin, Logger, MatterAccessory, PlatformAccessory, Service } from 'homebridge';
 import { CloudIAquaLinkProvider } from './api/cloud-provider.js';
 import { MockIAquaLinkProvider } from './api/mock-provider.js';
 import type { IAquaLinkProvider } from './api/provider.js';
@@ -44,6 +44,10 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
 
   configureAccessory(accessory: PlatformAccessory): void {
     this.cachedAccessories.push(accessory);
+  }
+
+  configureMatterAccessory(accessory: MatterAccessory): void {
+    this.matterPublisher.configureMatterAccessory(accessory);
   }
 
   async setPower(id: EquipmentId, on: boolean): Promise<void> {

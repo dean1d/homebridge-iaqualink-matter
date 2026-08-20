@@ -17,6 +17,7 @@ describe('associateMatterAccessory', () => {
 
   it('submits one complete topology in discovery order and routes commands correctly', async () => {
     const onOffOutlet = {};
+    const cachedThermostatType = { name: 'Thermostat' };
     const registerPlatformAccessories = vi.fn().mockResolvedValue(undefined);
     const unregisterPlatformAccessories = vi.fn().mockResolvedValue(undefined);
     const api = {
@@ -52,7 +53,19 @@ describe('associateMatterAccessory', () => {
       { id: 'pool-temperature', name: 'Pool Temperature', kind: 'temperature', available: true },
     ];
 
-    new MatterPublisher(api, log, commands).publish(equipment);
+    const publisher = new MatterPublisher(api, log, commands);
+    publisher.configureMatterAccessory({
+      UUID: 'iaqualink:matter:v7:pool-heater',
+      displayName: 'Cached Pool Heater',
+      deviceType: cachedThermostatType,
+      manufacturer: 'Jandy',
+      model: 'thermostat',
+      serialNumber: 'pool-heater',
+      context: { equipmentId: 'pool-heater' },
+      clusters: { thermostat: {} },
+      handlers: {},
+    } as MatterAccessory);
+    publisher.publish(equipment);
 
     await vi.waitFor(() => expect(registerPlatformAccessories).toHaveBeenCalledTimes(1));
     const [plugin, platform, accessories] = registerPlatformAccessories.mock.calls[0]!;
@@ -77,6 +90,10 @@ describe('associateMatterAccessory', () => {
     expect(filterPump.deviceType).toBe(onOffOutlet);
     expect(filterPump._associatedPlugin).toBe('homebridge-iaqualink-matter');
     expect(filterPump._associatedPlatform).toBe('iAquaLink');
+    const poolHeater = accessories[2] as MatterAccessory;
+    expect(poolHeater.deviceType).toBe(cachedThermostatType);
+    expect(poolHeater.displayName).toBe('Pool Heater');
+    expect(poolHeater.handlers?.thermostat).toBeDefined();
     expect(accessories.every((accessory: MatterAccessory & {
       _associatedPlugin?: string;
       _associatedPlatform?: string;
