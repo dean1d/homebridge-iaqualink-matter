@@ -26,7 +26,6 @@ export function associateMatterAccessory(accessory: MatterAccessory): MatterAcce
 
 export class MatterPublisher {
   private registration?: Promise<void>;
-  private readonly cachedAccessories = new Map<string, MatterAccessory>();
   private readonly states = new Map<EquipmentState['id'], EquipmentState>();
 
   constructor(
@@ -34,10 +33,6 @@ export class MatterPublisher {
     private readonly log: Logger,
     private readonly commands: MatterCommands,
   ) {}
-
-  configureMatterAccessory(accessory: MatterAccessory): void {
-    this.cachedAccessories.set(accessory.UUID, accessory);
-  }
 
   publish(equipment: EquipmentState[]): void {
     if (!this.api.isMatterEnabled() || !this.api.matter) {
@@ -49,7 +44,16 @@ export class MatterPublisher {
     const accessories: MatterAccessory[] = equipment.flatMap((item) => {
       const deviceType = this.deviceType(item);
       if (!deviceType) return [];
-      const currentAccessory: MatterAccessory = {
+      // Always submit the fully-composed device type (with its Heating/Cooling/
+      // Occupancy feature requirements). Homebridge's own Matter cache only
+      // persists a bare {name, code} device-type stub - it cannot restore the
+      // composed shape - and its AccessoryManager already compares composed
+      // features to decide whether to reuse or rebuild the endpoint. Feeding it
+      // that stub here (instead of letting it compare against the real thing)
+      // silently drops the composed features on every restart, breaking
+      // thermostat commands, without preventing the endpoint rebuild it was
+      // meant to avoid.
+      return [associateMatterAccessory({
         UUID: this.matterUuid(item.id),
         displayName: item.name,
         deviceType,
@@ -59,15 +63,7 @@ export class MatterPublisher {
         context: { equipmentId: item.id },
         clusters: this.clusters(item),
         handlers: this.handlers(item),
-      };
-      const cachedAccessory = this.cachedAccessories.get(currentAccessory.UUID);
-      return [associateMatterAccessory(cachedAccessory ? {
-        ...cachedAccessory,
-        ...currentAccessory,
-        // Match the device-type shape Homebridge restored so it attaches the
-        // current handlers to the existing endpoint instead of rebuilding it.
-        deviceType: cachedAccessory.deviceType ?? currentAccessory.deviceType,
-      } : currentAccessory)];
+      })];
     });
 
     if (accessories.length === 0) {

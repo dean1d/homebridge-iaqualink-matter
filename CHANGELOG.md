@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.5-beta.1] - 2026-08-19
+
+### Fixed
+
+- Stop substituting Homebridge's cache-restored Matter device type (a bare `{name, code}` stub with no composed cluster features) for the freshly-composed one on every restart. That substitution, introduced in 1.0.5-beta.0, silently dropped thermostat Heating/Cooling/Occupancy feature composition (breaking commands) and caused Homebridge's own accessory manager to detect a structural mismatch and rebuild the endpoint anyway (causing devices to reappear as new in Alexa on every child-bridge restart).
+
 ## [1.0.5-beta.0] - 2026-08-19
 
 ### Fixed
@@ -165,7 +171,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5-beta.0...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5-beta.1...HEAD
+[1.0.5-beta.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5-beta.0...v1.0.5-beta.1
 [1.0.5-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...v1.0.5-beta.0
 [1.0.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.2...v1.0.3
