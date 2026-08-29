@@ -44,15 +44,19 @@ export class MatterPublisher {
     const accessories: MatterAccessory[] = equipment.flatMap((item) => {
       const deviceType = this.deviceType(item);
       if (!deviceType) return [];
-      // Always submit the fully-composed device type (with its Heating/Cooling/
-      // Occupancy feature requirements). Homebridge's own Matter cache only
-      // persists a bare {name, code} device-type stub - it cannot restore the
-      // composed shape - and its AccessoryManager already compares composed
-      // features to decide whether to reuse or rebuild the endpoint. Feeding it
-      // that stub here (instead of letting it compare against the real thing)
-      // silently drops the composed features on every restart, breaking
-      // thermostat commands, without preventing the endpoint rebuild it was
-      // meant to avoid.
+      // Always submit the fully-composed device type (with its Heating/Cooling
+      // feature requirements). Homebridge's own Matter cache only persists a
+      // bare {name, code} device-type stub - it cannot restore the composed
+      // shape - and its AccessoryManager already compares composed features to
+      // decide whether to reuse or rebuild the endpoint. Feeding it that stub
+      // here (instead of letting it compare against the real thing) silently
+      // drops the composed features on every restart, breaking thermostat
+      // commands, without preventing the endpoint rebuild it was meant to
+      // avoid. deviceType() below deliberately composes only the feature this
+      // plugin actually implements (no Occupancy: occupiedHeating/CoolingSetpoint
+      // are part of the base Heating/Cooling feature attributes, not gated
+      // behind Occupancy) so the restored-from-cache shape and the freshly
+      // composed shape always match and the endpoint is reused across restarts.
       return [associateMatterAccessory({
         UUID: this.matterUuid(item.id),
         displayName: item.name,
@@ -119,12 +123,12 @@ export class MatterPublisher {
     if (item.kind === 'light') return types.OnOffLight;
     if (item.kind === 'thermostat') {
       return devices.ThermostatDevice.with(
-        devices.ThermostatRequirements.ThermostatServer.with('Heating', 'Occupancy'),
+        devices.ThermostatRequirements.ThermostatServer.with('Heating'),
       );
     }
     if (item.kind === 'heat-cool-thermostat') {
       return devices.ThermostatDevice.with(
-        devices.ThermostatRequirements.ThermostatServer.with('Cooling', 'Occupancy'),
+        devices.ThermostatRequirements.ThermostatServer.with('Cooling'),
       );
     }
     if (item.kind === 'switch') return types.OnOffOutlet;

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.6-beta.0] - 2026-08-28
+
+### Fixed
+
+- Drop the unused Matter `Occupancy` thermostat feature from Pool Heater, Spa Heater, and Heat Pump / Chiller. 1.0.5 still rebuilt these three endpoints on every restart because Homebridge's Matter cache restores a bare "Heating"/"Cooling" thermostat, while this plugin composed "Heating,Occupancy"/"Cooling,Occupancy" - a real feature mismatch that Homebridge's own accessory manager correctly treated as a structural change requiring a rebuild, making the devices reappear as new to Alexa/Google Home/Apple Home (and lose their room/automation assignments) on every Homebridge restart or host reboot. Occupancy was never used: `occupiedHeatingSetpoint`/`occupiedCoolingSetpoint` belong to the base Heating/Cooling feature attributes, not to Occupancy. All other equipment (switches, lights, sensors) was unaffected and already reattached cleanly.
+
 ## [1.0.5] - 2026-08-20
 
 ### Fixed
@@ -166,7 +172,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6-beta.0...HEAD
+[1.0.6-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5...v1.0.6-beta.0
 [1.0.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.2...v1.0.3
