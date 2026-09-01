@@ -25,7 +25,8 @@ jobs:
             const m = v.match(/-([a-zA-Z]+)/);
             console.log(m ? m[1] : 'latest');
           ")
-          echo "Publishing version $(node -p require('./package.json').version) to dist-tag '$TAG'"
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Publishing version $VERSION to dist-tag '$TAG'"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
       - run: npm publish --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }}
         env:
