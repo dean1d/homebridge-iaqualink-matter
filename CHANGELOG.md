@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [1.0.6-beta.0] - 2026-08-28
+## [1.0.6] - 2026-08-31
 
 ### Fixed
 
@@ -172,8 +172,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6-beta.0...HEAD
-[1.0.6-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5...v1.0.6-beta.0
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.2...v1.0.3

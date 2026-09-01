@@ -17,6 +17,16 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm publish --provenance --access public
+      - name: Determine npm dist-tag
+        id: dist-tag
+        run: |
+          TAG=$(node -e "
+            const v = require('./package.json').version;
+            const m = v.match(/-([a-zA-Z]+)/);
+            console.log(m ? m[1] : 'latest');
+          ")
+          echo "Publishing version $(node -p require('./package.json').version) to dist-tag '$TAG'"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+      - run: npm publish --provenance --access public --tag ${{ steps.dist-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
