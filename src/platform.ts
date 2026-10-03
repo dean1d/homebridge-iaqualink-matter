@@ -181,7 +181,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
   }
 
   private discover(equipment: EquipmentState[]): void {
-    for (const item of equipment) {
+    for (const [index, item] of equipment.entries()) {
       const uuid = this.api.hap.uuid.generate(`iaqualink:${item.id}`);
       let accessory = this.cachedAccessories.find((candidate) => candidate.UUID === uuid);
       if (!accessory) {
@@ -189,13 +189,41 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
         accessory.context.equipmentId = item.id;
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
-      this.handlers.set(item.id, new HapEquipmentAccessory(this, accessory, item));
+      if (item.id === 'heat-pump') equipment[index] = this.stabilizeHeatPumpKind(item, accessory);
+      this.handlers.set(item.id, new HapEquipmentAccessory(this, accessory, equipment[index]));
     }
     const valid = new Set(equipment.map((item) => this.api.hap.uuid.generate(`iaqualink:${item.id}`)));
     const stale = this.cachedAccessories.filter((accessory) => !valid.has(accessory.UUID));
     if (stale.length) this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
     this.matterPublisher.publish(equipment);
     void this.matterPublisher.update(equipment);
+  }
+
+  // The heat pump's chiller capability is only known for certain once a
+  // snapshot shows positive evidence of it (an explicit flag, a cooling
+  // setpoint, or a chill mode reading); a snapshot lacking that evidence just
+  // means the cloud API hasn't reported it on this poll, not that the
+  // hardware lost the capability. Since the composed Matter device type is
+  // only ever submitted once, on the first snapshot after a (re)connect, a
+  // single incomplete poll right after a reboot would otherwise permanently
+  // misrepresent a heat+cool pump as heating-only for that run, which Homebridge's
+  // Matter cache treats as a feature mismatch requiring an endpoint rebuild -
+  // surfacing to Matter controllers as a brand-new device. Persisting the
+  // capability in the cached accessory's context (once observed) and treating
+  // it as sticky avoids re-deriving it from scratch on every restart.
+  private stabilizeHeatPumpKind(item: EquipmentState, accessory: PlatformAccessory): EquipmentState {
+    if (item.kind === 'heat-cool-thermostat') {
+      accessory.context.chillAvailable = true;
+      return item;
+    }
+    if (accessory.context.chillAvailable !== true) return item;
+    return {
+      ...item,
+      name: 'Heat Pump / Chiller',
+      kind: 'heat-cool-thermostat',
+      mode: item.on ? 'cool' : 'off',
+      metadata: { ...item.metadata, coolingOnly: true },
+    };
   }
 
   private async shutdown(): Promise<void> {

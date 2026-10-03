@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-10-02
+
+### Fixed
+
+- Stop letting a single incomplete poll decide the Heat Pump / Chiller's permanent Matter device shape. That device's Heating-only vs. Heating+Cooling composition is derived from the cloud API's heat-pump snapshot, but it's only ever submitted to Homebridge's Matter cache once, on the first poll after a (re)connect. When that first poll after a reboot happened to lack chill-capability evidence (an explicit flag, a cooling setpoint, or a chill mode reading) - which can happen transiently right after reconnecting - the heat pump got composed as heating-only, mismatching Homebridge's cached shape from the previous run and triggering the same endpoint-rebuild-as-new behavior fixed for other thermostats in 1.0.6, but only on some reboots. The chiller capability is now persisted in the cached accessory once observed and treated as sticky, so an ambiguous poll right after a reboot no longer downgrades it.
+
 ## [1.0.6] - 2026-08-31
 
 ### Fixed
@@ -172,7 +178,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.3...v1.0.4
