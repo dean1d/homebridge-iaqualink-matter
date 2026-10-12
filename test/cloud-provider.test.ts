@@ -206,6 +206,51 @@ describe('CloudIAquaLinkProvider', () => {
     });
   });
 
+  const customAuxDevices = {
+    devices_screen: [
+      { status: 'Online' }, { response: '' }, { group: '1' },
+      { aux_1: [{ state: '1' }, { label: 'Jet Pump' }, { type: '0' }, { subtype: '0' }] },
+      { aux_2: [{ state: '0' }, { label: 'Sheer Dscnt' }, { type: '0' }, { subtype: '0' }] },
+      { aux_3: [{ state: '0' }, { label: 'Pool Light' }, { type: '2' }, { subtype: '5' }] },
+      { aux_4: [{ state: '0' }, { label: 'Aux 4' }, { type: '0' }, { subtype: '0' }] },
+      { aux_EA: [{ state: '0' }, { label: 'Extra Aux' }, { type: '0' }, { subtype: '0' }] },
+    ],
+  };
+
+  it('exposes aux devices with unrecognized labels under their iAquaLink names', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login))
+      .mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response(home))
+      .mockResolvedValueOnce(response(customAuxDevices));
+    const cloud = provider(fetchMock);
+    await cloud.connect();
+    const snapshot = await cloud.getSnapshot();
+    expect(snapshot.equipment.find((item) => item.id === 'aux-1')).toMatchObject({
+      name: 'Jet Pump',
+      kind: 'switch',
+      on: true,
+      metadata: { command: 'set_aux_1' },
+    });
+    expect(snapshot.equipment.find((item) => item.id === 'sheer-descent')?.name).toBe('Sheer Descent');
+    expect(snapshot.equipment.find((item) => item.id === 'pool-light')?.kind).toBe('light');
+    expect(snapshot.equipment.map((item) => item.id)).not.toEqual(expect.arrayContaining(['aux-4']));
+    expect(snapshot.equipment.map((item) => item.id)).not.toEqual(expect.arrayContaining(['aux-ea']));
+  });
+
+  it('sends the aux command for a device with an unrecognized label', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login))
+      .mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response(home))
+      .mockResolvedValueOnce(response(customAuxDevices))
+      .mockResolvedValueOnce(response(home));
+    const cloud = provider(fetchMock, { enableCloudControl: true });
+    await cloud.connect();
+    await cloud.setPower('aux-1', false);
+    expect(String(fetchMock.mock.calls[4][0])).toContain('command=set_aux_1');
+  });
+
   it('routes heat-pump setpoints through the HPM command in controller units', async () => {
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(response(login))

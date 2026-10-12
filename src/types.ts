@@ -33,7 +33,8 @@ export type EquipmentId =
   | 'high-speed'
   | 'pool-light'
   | 'spa-light'
-  | 'swg';
+  | 'swg'
+  | `aux-${string}`;
 
 export interface EquipmentState {
   id: EquipmentId;
