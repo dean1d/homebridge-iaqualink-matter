@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.0] - 2026-10-18
+
 ### Fixed
 
-- Expose every assigned aux circuit, not only those whose iAquaLink label matches a built-in name (Pool Light, Spa Light, Air Blower, Sheer Descent/Waterfall, High Speed). Aux devices with other labels, such as "Jet Pump", were silently dropped; they now appear as switches (or lights, for light-type circuits) named after their iAquaLink label. Circuits still carrying a default label ("Aux 4", "Extra Aux") are treated as unassigned and skipped. Existing devices keep their current identities. (#1)
+- Expose every assigned aux circuit, not only those whose iAquaLink label matches a built-in name (Pool Light, Spa Light, Air Blower, Sheer Descent/Waterfall, High Speed). Aux devices with other labels, such as "Jet Pump", were silently dropped; they now appear as switches (or lights, for light-type circuits) named after their iAquaLink label, keyed by the stable internal slot id rather than the user-editable label. Circuits still carrying a default label ("Aux 4", "Extra Aux") are treated as unassigned and skipped; that detection is restricted to a short numeric/alphanumeric slot code so a custom label that keeps the "Aux" prefix (e.g. "Aux Heater") isn't mistaken for a placeholder and dropped the same way. Existing devices keep their current identities. (#1)
 
 ## [1.0.7] - 2026-10-02
 
@@ -182,7 +184,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.0...HEAD
+[1.0.8-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.7...v1.0.8-beta.0
 [1.0.7]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.4...v1.0.5
