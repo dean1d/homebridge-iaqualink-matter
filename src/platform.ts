@@ -53,10 +53,10 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
         ? this.config.spaLightProgram
         : undefined;
     if (on && preferredProgram) {
-      await this.runCommand(id, () => this.provider.setLightProgram(id, preferredProgram));
+      await this.runCommand(id, () => this.provider.setLightProgram(id, preferredProgram), () => this.rememberPending(id, { on: true }));
       return;
     }
-    await this.runCommand(id, () => this.provider.setPower(id, on));
+    await this.runCommand(id, () => this.provider.setPower(id, on), () => this.rememberPending(id, { on }));
   }
   async setTargetTemperature(id: EquipmentId, temperatureC: number): Promise<void> {
     if (id === 'heat-pump') {
@@ -94,7 +94,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     await this.runCommand(id, () => this.provider.setThermostatMode(id, mode));
   }
   async setLightProgram(id: EquipmentId, program: string): Promise<void> {
-    await this.runCommand(id, () => this.provider.setLightProgram(id, program));
+    await this.runCommand(id, () => this.provider.setLightProgram(id, program), () => this.rememberPending(id, { on: true }));
   }
 
   currentWaterTemperature(id: EquipmentId): number | undefined {
