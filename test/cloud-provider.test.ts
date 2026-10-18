@@ -214,6 +214,7 @@ describe('CloudIAquaLinkProvider', () => {
       { aux_3: [{ state: '0' }, { label: 'Pool Light' }, { type: '2' }, { subtype: '5' }] },
       { aux_4: [{ state: '0' }, { label: 'Aux 4' }, { type: '0' }, { subtype: '0' }] },
       { aux_EA: [{ state: '0' }, { label: 'Extra Aux' }, { type: '0' }, { subtype: '0' }] },
+      { aux_5: [{ state: '0' }, { label: 'Aux Heater' }, { type: '0' }, { subtype: '0' }] },
     ],
   };
 
@@ -236,6 +237,21 @@ describe('CloudIAquaLinkProvider', () => {
     expect(snapshot.equipment.find((item) => item.id === 'pool-light')?.kind).toBe('light');
     expect(snapshot.equipment.map((item) => item.id)).not.toEqual(expect.arrayContaining(['aux-4']));
     expect(snapshot.equipment.map((item) => item.id)).not.toEqual(expect.arrayContaining(['aux-ea']));
+  });
+
+  it('does not mistake a custom label kept under the Aux prefix for an unassigned placeholder', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login))
+      .mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response(home))
+      .mockResolvedValueOnce(response(customAuxDevices));
+    const cloud = provider(fetchMock);
+    await cloud.connect();
+    const snapshot = await cloud.getSnapshot();
+    expect(snapshot.equipment.find((item) => item.id === 'aux-5')).toMatchObject({
+      name: 'Aux Heater',
+      kind: 'switch',
+    });
   });
 
   it('sends the aux command for a device with an unrecognized label', async () => {

@@ -563,9 +563,14 @@ function auxEquipmentId(label: string): EquipmentId | undefined {
   if (label.includes('high') && label.includes('speed')) return 'high-speed';
   return undefined;
 }
-/** Default iAquaLink labels such as "Aux 4" or "Extra Aux" mean the circuit has not been assigned. */
+/**
+ * Default iAquaLink labels such as "Aux 4" or "Extra Aux" mean the circuit has not been
+ * assigned. The optional suffix is restricted to a short numeric/alphanumeric slot code
+ * (e.g. "4", "12", "b1") rather than any word, so a genuine custom label that happens to
+ * keep the "Aux" prefix (e.g. "Aux Heater") is not mistaken for an unassigned placeholder.
+ */
 function isUnassignedAuxLabel(label: string): boolean {
-  return /^(extra aux|aux( [a-z0-9]+)?)$/.test(label);
+  return /^(extra aux|aux( [a-z0-9]{1,3})?)$/.test(label);
 }
 function equipmentName(id: EquipmentId): string {
   const names: Partial<Record<EquipmentId, string>> = {
