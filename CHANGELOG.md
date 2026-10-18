@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.2] - 2026-10-18
+
+### Fixed
+
+- Extend the pending on/off state from 1.0.8-beta.1 to `setThermostatMode` (Pool Heater, Spa Heater, Heat Pump / Chiller), which had the same gap: no pending state meant a mode-change command's immediate post-command refresh could read iAquaLink's not-yet-updated cloud state and report the thermostat as still off/in its old mode. Because that refresh republishes every equipment item's state, not only the one just commanded, an unrelated device with its own command in flight around the same time (e.g. a light) could trigger this for the thermostat and vice versa, making two unrelated devices appear to flicker together.
+
 ## [1.0.8-beta.1] - 2026-10-18
 
 ### Fixed
@@ -190,7 +196,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.1...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.2...HEAD
+[1.0.8-beta.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.1...v1.0.8-beta.2
 [1.0.8-beta.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.0...v1.0.8-beta.1
 [1.0.8-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.7...v1.0.8-beta.0
 [1.0.7]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.6...v1.0.7

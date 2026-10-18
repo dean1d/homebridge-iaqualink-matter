@@ -91,7 +91,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     });
   }
   async setThermostatMode(id: EquipmentId, mode: 'off' | 'heat' | 'cool' | 'auto'): Promise<void> {
-    await this.runCommand(id, () => this.provider.setThermostatMode(id, mode));
+    await this.runCommand(id, () => this.provider.setThermostatMode(id, mode), () => this.rememberPending(id, { mode, on: mode !== 'off' }));
   }
   async setLightProgram(id: EquipmentId, program: string): Promise<void> {
     await this.runCommand(id, () => this.provider.setLightProgram(id, program), () => this.rememberPending(id, { on: true }));
