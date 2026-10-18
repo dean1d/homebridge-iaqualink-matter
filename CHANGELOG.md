@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Expose every assigned aux circuit, not only those whose iAquaLink label matches a built-in name (Pool Light, Spa Light, Air Blower, Sheer Descent/Waterfall, High Speed). Aux devices with other labels, such as "Jet Pump", were silently dropped; they now appear as switches (or lights, for light-type circuits) named after their iAquaLink label. Circuits still carrying a default label ("Aux 4", "Extra Aux") are treated as unassigned and skipped. Existing devices keep their current identities. (#1)
+
 ## [1.0.7] - 2026-10-02
 
 ### Fixed
