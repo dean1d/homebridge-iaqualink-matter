@@ -113,7 +113,13 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     } catch (error) {
       this.log.warn(`Command for ${id} was not applied: ${error instanceof Error ? error.message : String(error)}`);
     }
-    await this.refresh();
+    // Route through the same queue as the command itself so a burst of
+    // retried commands (e.g. a controller resending a write) can never have
+    // their refreshes overlap. A concurrent getSnapshot() for one device
+    // racing another's was republishing stale/inconsistent state for
+    // unrelated equipment to Matter, making a controller "correct" a device
+    // nobody touched.
+    await this.queue.enqueue(() => this.refresh());
   }
 
   private async launch(): Promise<void> {
@@ -121,7 +127,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       await this.provider.connect();
       await this.refresh(true);
       const interval = Math.max(15, this.config.pollIntervalSeconds ?? 30) * 1000;
-      this.timer = setInterval(() => void this.refresh(), interval);
+      this.timer = setInterval(() => void this.queue.enqueue(() => this.refresh()), interval);
     } catch (error) {
       this.log.error(`Unable to start iAquaLink: ${String(error)}`);
     }

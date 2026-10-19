@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.6] - 2026-10-18
+
+### Fixed
+
+- Serialize every refresh - both the one after a command and the periodic poll - through the same queue already used for commands, so they can never run concurrently. Confirmed by testing that an unrelated thermostat's mode only ever flickered while something else was actively being commanded, never at idle: a burst of retried commands (e.g. a controller resending a write) could previously fire multiple overlapping `getSnapshot()` calls against the same cloud session at once, and a race between them could republish inconsistent state for equipment nobody touched, making a controller "correct" a device it was never asked to change.
+
 ## [1.0.8-beta.5] - 2026-10-18
 
 ### Fixed
@@ -218,7 +224,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.5...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.6...HEAD
+[1.0.8-beta.6]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.5...v1.0.8-beta.6
 [1.0.8-beta.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.4...v1.0.8-beta.5
 [1.0.8-beta.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.3...v1.0.8-beta.4
 [1.0.8-beta.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.2...v1.0.8-beta.3
