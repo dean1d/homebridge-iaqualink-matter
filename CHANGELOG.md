@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.8] - 2026-10-18
+
+### Fixed
+
+- Push the just-commanded value to HAP and Matter immediately when a command succeeds, instead of only on the next refresh. Testing 1.0.8-beta.7 showed a controller's retry cadence was unchanged by how quickly the write handler's promise resolved, meaning it was never waiting on that - it was waiting to see the characteristic itself change, which previously only happened once the next cloud poll completed. The immediate update uses state already in memory, not a network call, so it carries none of the race risk the 1.0.8-beta.4 attempt had.
+
 ## [1.0.8-beta.7] - 2026-10-18
 
 ### Fixed
@@ -230,7 +236,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.7...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.8...HEAD
+[1.0.8-beta.8]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.7...v1.0.8-beta.8
 [1.0.8-beta.7]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.6...v1.0.8-beta.7
 [1.0.8-beta.6]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.5...v1.0.8-beta.6
 [1.0.8-beta.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.4...v1.0.8-beta.5

@@ -53,10 +53,10 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
         ? this.config.spaLightProgram
         : undefined;
     if (on && preferredProgram) {
-      await this.runCommand(id, () => this.provider.setLightProgram(id, preferredProgram), () => this.rememberPending(id, { on: true }));
+      await this.runCommand(id, () => this.provider.setLightProgram(id, preferredProgram), () => this.applyOptimisticUpdate(id, { on: true }));
       return;
     }
-    await this.runCommand(id, () => this.provider.setPower(id, on), () => this.rememberPending(id, { on }));
+    await this.runCommand(id, () => this.provider.setPower(id, on), () => this.applyOptimisticUpdate(id, { on }));
   }
   async setTargetTemperature(id: EquipmentId, temperatureC: number): Promise<void> {
     if (id === 'heat-pump') {
@@ -64,21 +64,21 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       return;
     }
     await this.runCommand(id, () => this.provider.setTargetTemperature(id, temperatureC), () => {
-      this.rememberPending(id, { targetTemperatureC: temperatureC });
+      this.applyOptimisticUpdate(id, { targetTemperatureC: temperatureC });
       if (id === 'pool-heater') {
         const chill = this.snapshot?.equipment.find(
           (item) => item.id === 'heat-pump',
         )?.coolingTargetTemperatureC;
         const adjustedChill = temperatureC + 5 / 1.8;
         if (chill !== undefined && Math.abs(temperatureC - chill) < 5 / 1.8 && adjustedChill <= 40) {
-          this.rememberPending('heat-pump', { coolingTargetTemperatureC: adjustedChill });
+          this.applyOptimisticUpdate('heat-pump', { coolingTargetTemperatureC: adjustedChill });
         }
       }
     });
   }
   async setCoolingTargetTemperature(id: EquipmentId, temperatureC: number): Promise<void> {
     await this.runCommand(id, () => this.provider.setCoolingTargetTemperature(id, temperatureC), () => {
-      this.rememberPending('heat-pump', { coolingTargetTemperatureC: temperatureC });
+      this.applyOptimisticUpdate('heat-pump', { coolingTargetTemperatureC: temperatureC });
       const heat = this.snapshot?.equipment.find(
         (item) => item.id === 'pool-heater',
       )?.targetTemperatureC;
@@ -86,15 +86,15 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       if (heat !== undefined
         && Math.abs(heat - temperatureC) < 5 / 1.8
         && adjustedHeat >= (34 - 32) / 1.8) {
-        this.rememberPending('pool-heater', { targetTemperatureC: adjustedHeat });
+        this.applyOptimisticUpdate('pool-heater', { targetTemperatureC: adjustedHeat });
       }
     });
   }
   async setThermostatMode(id: EquipmentId, mode: 'off' | 'heat' | 'cool' | 'auto'): Promise<void> {
-    await this.runCommand(id, () => this.provider.setThermostatMode(id, mode), () => this.rememberPending(id, { mode, on: mode !== 'off' }));
+    await this.runCommand(id, () => this.provider.setThermostatMode(id, mode), () => this.applyOptimisticUpdate(id, { mode, on: mode !== 'off' }));
   }
   async setLightProgram(id: EquipmentId, program: string): Promise<void> {
-    await this.runCommand(id, () => this.provider.setLightProgram(id, program), () => this.rememberPending(id, { on: true }));
+    await this.runCommand(id, () => this.provider.setLightProgram(id, program), () => this.applyOptimisticUpdate(id, { on: true }));
   }
 
   currentWaterTemperature(id: EquipmentId): number | undefined {
@@ -188,6 +188,21 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       // iAquaLink can return its pre-command state for one or more polls.
       expiresAt: Date.now() + Math.max(60_000, (this.config.pollIntervalSeconds ?? 30) * 2_000),
     });
+  }
+
+  // Push the just-commanded value to HAP/Matter immediately, instead of
+  // waiting for the next refresh to pick it up from a fresh cloud poll.
+  // Controllers watch for the characteristic itself to change, not for our
+  // write handler's promise to resolve, so a value that only appears once a
+  // cloud round-trip completes reads as an unacknowledged command and gets
+  // resent - regardless of how quickly that promise resolves.
+  private applyOptimisticUpdate(id: EquipmentId, values: Partial<EquipmentState>): void {
+    this.rememberPending(id, values);
+    const current = this.snapshot?.equipment.find((item) => item.id === id);
+    if (!current) return;
+    const optimistic = { ...current, ...values };
+    this.handlers.get(id)?.update(optimistic);
+    void this.matterPublisher.update([optimistic]);
   }
 
   private discover(equipment: EquipmentState[]): void {
