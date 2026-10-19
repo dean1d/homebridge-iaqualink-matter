@@ -267,7 +267,7 @@ export class MatterPublisher {
 
   private runMatterCommand(id: EquipmentState['id'], action: string, command: () => Promise<void>): Promise<void> {
     return runWithCommandOrigin('Matter', this.api.isMatterEnabled(), () => {
-      this.log.info(`${commandLogPrefix()}Matter command for ${id}: ${action}`);
+      this.log.info(`${commandLogPrefix()}Matter Set command for ${id}: ${action}`);
       return command();
     });
   }

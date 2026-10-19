@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.4] - 2026-10-18
+
+### Fixed
+
+- Stop HomeKit from repeatedly resending the same on/off and light-program command. The command handler awaited a full extra cloud round-trip (re-fetching the whole equipment snapshot) before resolving, on top of the round-trip for the command itself - slow enough that HomeKit (and potentially other controllers) treated the accessory as unresponsive and resent the write every few seconds. That refresh already runs in the background everywhere else in this plugin (the periodic poll timer does the same); the command handler now does too, so it can acknowledge as soon as the command itself succeeds.
+
+### Added
+
+- Log whether a given command is a "Set" (write) or "Read" (poll) command. Read commands log at debug level to avoid spam, since they fire on every poll; Set commands remain at info level.
+
 ## [1.0.8-beta.3] - 2026-10-18
 
 ### Added
@@ -202,7 +212,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.3...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.4...HEAD
+[1.0.8-beta.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.3...v1.0.8-beta.4
 [1.0.8-beta.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.2...v1.0.8-beta.3
 [1.0.8-beta.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.1...v1.0.8-beta.2
 [1.0.8-beta.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.0...v1.0.8-beta.1

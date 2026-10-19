@@ -94,7 +94,7 @@ describe('associateMatterAccessory', () => {
     expect(commands.setPower).toHaveBeenNthCalledWith(2, 'spa-mode', true);
     expect(commands.setPower).toHaveBeenNthCalledWith(3, 'spa-light', true);
     expect(commands.setThermostatMode).toHaveBeenCalledWith('pool-heater', 'heat');
-    expect(log.info).toHaveBeenCalledWith('Matter - Matter command for spa-mode: power on');
+    expect(log.info).toHaveBeenCalledWith('Matter - Matter Set command for spa-mode: power on');
     expect(log.info).toHaveBeenCalledWith('Submitted 5 Matter accessories in one topology.');
   });
 });

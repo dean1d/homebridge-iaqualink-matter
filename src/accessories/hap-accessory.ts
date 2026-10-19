@@ -204,7 +204,7 @@ export class HapEquipmentAccessory {
 
   private runHapCommand(id: EquipmentState['id'], action: string, command: () => Promise<void>): Promise<void> {
     return runWithCommandOrigin('HAP', this.platform.api.isMatterEnabled(), () => {
-      this.platform.log.info(`${commandLogPrefix()}HAP command for ${id}: ${action}`);
+      this.platform.log.info(`${commandLogPrefix()}HAP Set command for ${id}: ${action}`);
       return command();
     });
   }
