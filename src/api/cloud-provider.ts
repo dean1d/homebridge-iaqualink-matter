@@ -2,6 +2,7 @@ import { createHmac } from 'node:crypto';
 import type { Logger } from 'homebridge';
 import type { EquipmentId, EquipmentState, SystemSnapshot } from '../types.js';
 import type { IAquaLinkProvider } from './provider.js';
+import { commandLogPrefix } from '../util/command-origin.js';
 
 const API_KEY = 'EOOEMOW4YR6QNB07';
 const API_SIGNING_KEY = 'cj7iYKjiKxOqiLcN65PffA';
@@ -312,7 +313,7 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
 
   private async sessionCommand(command: string, parameters: Record<string, string> = {}): Promise<JsonObject> {
     if (!command.startsWith('get_')) {
-      this.log.info(`iAquaLink command: ${command} ${JSON.stringify(parameters)}`);
+      this.log.info(`${commandLogPrefix()}iAquaLink command: ${command} ${JSON.stringify(parameters)}`);
     }
     const url = new URL(SESSION_URL);
     url.search = new URLSearchParams({

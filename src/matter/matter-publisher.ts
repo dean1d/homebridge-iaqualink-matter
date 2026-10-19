@@ -2,6 +2,7 @@ import { devices } from 'homebridge';
 import type { API, Logger, MatterAccessory } from 'homebridge';
 import type { EquipmentState } from '../types.js';
 import { PLUGIN_NAME, PLATFORM_NAME } from '../settings.js';
+import { commandLogPrefix, runWithCommandOrigin } from '../util/command-origin.js';
 
 interface MatterCommands {
   setPower(id: EquipmentState['id'], on: boolean): Promise<void>;
@@ -265,8 +266,10 @@ export class MatterPublisher {
   }
 
   private runMatterCommand(id: EquipmentState['id'], action: string, command: () => Promise<void>): Promise<void> {
-    this.log.info(`Matter command for ${id}: ${action}`);
-    return command();
+    return runWithCommandOrigin('Matter', this.api.isMatterEnabled(), () => {
+      this.log.info(`${commandLogPrefix()}Matter command for ${id}: ${action}`);
+      return command();
+    });
   }
 
   private matterUuid(id: EquipmentState['id']): string {

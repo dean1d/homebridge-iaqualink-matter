@@ -1,6 +1,7 @@
 import type { PlatformAccessory, Service } from 'homebridge';
 import type { IAquaLinkPlatform } from '../platform.js';
 import type { EquipmentState } from '../types.js';
+import { commandLogPrefix, runWithCommandOrigin } from '../util/command-origin.js';
 
 export class HapEquipmentAccessory {
   private readonly service: Service;
@@ -100,7 +101,8 @@ export class HapEquipmentAccessory {
     if (state.kind === 'switch') {
       this.service.getCharacteristic(C.On)
         .onGet(() => this.state.on ?? false)
-        .onSet((value) => this.platform.setPower(state.id, Boolean(value)));
+        .onSet((value) => this.runHapCommand(state.id, `power ${value ? 'on' : 'off'}`,
+          () => this.platform.setPower(state.id, Boolean(value))));
       return;
     }
     if (state.kind === 'light') {
@@ -108,7 +110,9 @@ export class HapEquipmentAccessory {
       this.service.setPrimaryService(true);
       this.service.setCharacteristic(C.Name, 'Light');
       this.service.setCharacteristic(C.ConfiguredName, 'Light');
-      this.service.getCharacteristic(C.On).onGet(() => this.state.on ?? false).onSet((value) => this.platform.setPower(state.id, Boolean(value)));
+      this.service.getCharacteristic(C.On).onGet(() => this.state.on ?? false).onSet((value) => this.runHapCommand(
+        state.id, `power ${value ? 'on' : 'off'}`, () => this.platform.setPower(state.id, Boolean(value)),
+      ));
       this.service.removeCharacteristic(this.service.getCharacteristic(C.Hue));
       this.service.removeCharacteristic(this.service.getCharacteristic(C.Saturation));
       this.service.removeCharacteristic(this.service.getCharacteristic(C.Brightness));
@@ -138,17 +142,21 @@ export class HapEquipmentAccessory {
         ? this.state.coolingTargetTemperatureC ?? 24
         : this.state.targetTemperatureC ?? 24)
       .onSet((value) => state.id === 'heat-pump'
-        ? this.platform.setCoolingTargetTemperature(state.id, Number(value))
-        : this.platform.setTargetTemperature(state.id, Number(value)));
+        ? this.runHapCommand(state.id, `cooling setpoint ${Number(value)}°C`,
+          () => this.platform.setCoolingTargetTemperature(state.id, Number(value)))
+        : this.runHapCommand(state.id, `heating setpoint ${Number(value)}°C`,
+          () => this.platform.setTargetTemperature(state.id, Number(value))));
     if (state.kind === 'heat-cool-thermostat' && state.id !== 'heat-pump') {
       this.service.getCharacteristic(C.HeatingThresholdTemperature)
         .setProps({ minValue: 3.9, maxValue: 40, minStep: 0.1 })
         .onGet(() => this.state.coolingTargetTemperatureC ?? 24)
-        .onSet((value) => this.platform.setCoolingTargetTemperature(state.id, Number(value)));
+        .onSet((value) => this.runHapCommand(state.id, `cooling setpoint ${Number(value)}°C`,
+          () => this.platform.setCoolingTargetTemperature(state.id, Number(value))));
       this.service.getCharacteristic(C.CoolingThresholdTemperature)
         .setProps({ minValue: 1.1, maxValue: 40, minStep: 0.1 })
         .onGet(() => this.state.targetTemperatureC ?? 30)
-        .onSet((value) => this.platform.setTargetTemperature(state.id, Number(value)));
+        .onSet((value) => this.runHapCommand(state.id, `heating setpoint ${Number(value)}°C`,
+          () => this.platform.setTargetTemperature(state.id, Number(value))));
     }
     this.service.getCharacteristic(C.CurrentHeatingCoolingState).onGet(() => {
       if (this.state.currentAction === 'heating') return C.CurrentHeatingCoolingState.HEAT;
@@ -162,7 +170,7 @@ export class HapEquipmentAccessory {
       .setProps({ validValues: allowedModes })
       .onGet(() => this.targetMode()).onSet((value) => {
       const mode = Number(value) === C.TargetHeatingCoolingState.HEAT ? 'heat' : Number(value) === C.TargetHeatingCoolingState.COOL ? 'cool' : Number(value) === C.TargetHeatingCoolingState.AUTO ? 'auto' : 'off';
-      return this.platform.setThermostatMode(state.id, mode);
+      return this.runHapCommand(state.id, `mode ${mode}`, () => this.platform.setThermostatMode(state.id, mode));
     });
   }
 
@@ -188,9 +196,16 @@ export class HapEquipmentAccessory {
         .onSet(async (value) => {
           if (!value) return;
           setTimeout(() => service.updateCharacteristic(C.On, false), 1000);
-          await this.platform.setLightProgram(state.id, program);
+          await this.runHapCommand(state.id, `program ${program}`, () => this.platform.setLightProgram(state.id, program));
         });
       this.programServices.push(service);
     }
+  }
+
+  private runHapCommand(id: EquipmentState['id'], action: string, command: () => Promise<void>): Promise<void> {
+    return runWithCommandOrigin('HAP', this.platform.api.isMatterEnabled(), () => {
+      this.platform.log.info(`${commandLogPrefix()}HAP command for ${id}: ${action}`);
+      return command();
+    });
   }
 }

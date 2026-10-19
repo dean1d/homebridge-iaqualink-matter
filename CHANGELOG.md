@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.3] - 2026-10-18
+
+### Added
+
+- Tag command log lines with `HAP - ` or `Matter - ` so it's clear which protocol sent a given command, including the underlying `iAquaLink command: ...` cloud call several layers down from where it was triggered. Only applied when Matter is enabled, since that's the only protocol a user opts into (HAP has no equivalent plugin-visible setting and is on by default) - a single-protocol setup's logs are unchanged.
+
 ## [1.0.8-beta.2] - 2026-10-18
 
 ### Fixed
@@ -196,7 +202,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.2...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.3...HEAD
+[1.0.8-beta.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.2...v1.0.8-beta.3
 [1.0.8-beta.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.1...v1.0.8-beta.2
 [1.0.8-beta.1]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.0...v1.0.8-beta.1
 [1.0.8-beta.0]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.7...v1.0.8-beta.0
