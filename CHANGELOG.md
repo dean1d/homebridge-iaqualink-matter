@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.5] - 2026-10-18
+
+### Fixed
+
+- Revert the 1.0.8-beta.4 change that ran the post-command refresh in the background instead of awaiting it. That change was intended to stop HomeKit from resending commands, but it did not fix that (the resends continued), and it made a separate, pre-existing issue worse: with no await, repeated commands could trigger overlapping, unserialized refreshes that race each other re-publishing every device's state, not only the one just commanded - compounding the cross-device state flicker already discussed in 1.0.8-beta.2, up to the point of an unrelated thermostat's mode visibly cycling. Awaiting the refresh restores the back-pressure that kept retries from piling up concurrently.
+
 ## [1.0.8-beta.4] - 2026-10-18
 
 ### Fixed
@@ -212,7 +218,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.4...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.5...HEAD
+[1.0.8-beta.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.4...v1.0.8-beta.5
 [1.0.8-beta.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.3...v1.0.8-beta.4
 [1.0.8-beta.3]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.2...v1.0.8-beta.3
 [1.0.8-beta.2]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.1...v1.0.8-beta.2

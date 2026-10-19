@@ -113,13 +113,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     } catch (error) {
       this.log.warn(`Command for ${id} was not applied: ${error instanceof Error ? error.message : String(error)}`);
     }
-    // Don't make the caller (a HAP/Matter write handler) wait on a second
-    // full cloud round-trip before it can acknowledge the command - the
-    // pending state set by onSuccess() above already reflects the change.
-    // Awaiting here measurably slowed the handler enough that HomeKit
-    // treated it as unresponsive and resent the same command every few
-    // seconds.
-    void this.refresh();
+    await this.refresh();
   }
 
   private async launch(): Promise<void> {
