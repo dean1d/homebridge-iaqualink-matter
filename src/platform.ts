@@ -118,8 +118,12 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     // their refreshes overlap. A concurrent getSnapshot() for one device
     // racing another's was republishing stale/inconsistent state for
     // unrelated equipment to Matter, making a controller "correct" a device
-    // nobody touched.
-    await this.queue.enqueue(() => this.refresh());
+    // nobody touched. Deliberately not awaited: the caller (a HAP/Matter
+    // write handler) only needs to wait for the command itself to
+    // acknowledge - making it also wait for this refresh added a second full
+    // cloud round-trip on top of the command's own, which was slow enough
+    // that HomeKit treated the write as unacknowledged and resent it.
+    void this.queue.enqueue(() => this.refresh());
   }
 
   private async launch(): Promise<void> {

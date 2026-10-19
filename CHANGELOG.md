@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.7] - 2026-10-18
+
+### Fixed
+
+- Stop making a HAP/Matter write handler wait on the post-command refresh before it can acknowledge the command, on top of waiting for the command itself. The refresh stays serialized through the same queue as commands (so 1.0.8-beta.6's fix against overlapping, racing refreshes still holds) but is no longer awaited by the caller, cutting the write handler's acknowledgment time roughly in half. The command's own cloud round-trip is latency this can't remove, so this may only reduce, not eliminate, a controller resending a write it thinks went unacknowledged.
+
 ## [1.0.8-beta.6] - 2026-10-18
 
 ### Fixed
@@ -224,7 +230,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Authentication failures, diagnostics, and logs avoid credentials, account identifiers, raw cloud responses, and session data.
 
-[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.6...HEAD
+[Unreleased]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.7...HEAD
+[1.0.8-beta.7]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.6...v1.0.8-beta.7
 [1.0.8-beta.6]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.5...v1.0.8-beta.6
 [1.0.8-beta.5]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.4...v1.0.8-beta.5
 [1.0.8-beta.4]: https://github.com/dean1d/homebridge-iAqualink-Matter/compare/v1.0.8-beta.3...v1.0.8-beta.4
