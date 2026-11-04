@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-11-04
+
+### Added
+
+- Tag command log lines with `HAP - ` or `Matter - ` (when Matter is enabled) so it's clear which protocol sent a command, and log cloud commands as "Set" (info) or "Read" (debug) commands.
+
+### Changed
+
+- Light program switches are momentary: they turn back off 1.5 seconds after being selected, since iAquaLink doesn't report the active program and it can be changed outside HomeKit.
+
+### Fixed
+
+- Expose every assigned aux circuit, not only those whose label matches a built-in name, so devices such as "Jet Pump" now appear, named after their iAquaLink label. Circuits still carrying a default label ("Aux 4", "Extra Aux") are skipped. (#1)
+- Stop HomeKit and Matter controllers from repeatedly resending on/off, light-program and thermostat commands, which could overwhelm the iAquaLink controller. The just-commanded state is now pushed to HAP and Matter immediately and held until the cloud catches up, write handlers acknowledge without waiting on a follow-up refresh, light program switches no longer reset while a write is still pending, and a repeated HomeKit write for a command already running (or finished within 20 seconds) is ignored.
+- Serialize every refresh through the command queue, so overlapping refreshes can no longer republish inconsistent state and make an unrelated device, such as a thermostat's mode, appear to flicker.
+
 ## [1.0.8-beta.10] - 2026-11-04
 
 ### Fixed
