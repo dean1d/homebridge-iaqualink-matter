@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.9] - 2026-11-04
+
+### Fixed
+
+- Stop pool and spa light program switches from resending `set_light` in an endless loop. The switches used to snap back off a second after being turned on, which HomeKit read as an unacknowledged write and resent - each resend firing another light command until the iAquaLink controller was overwhelmed. Program switches now act like radio buttons: the selected program stays on while the light is on, and turning it off turns the light off. A repeated request for the program already being applied is ignored, and the last selected program is remembered across restarts.
+
 ## [1.0.8-beta.8] - 2026-10-18
 
 ### Fixed
