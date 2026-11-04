@@ -3,13 +3,13 @@ import type { IAquaLinkPlatform } from '../platform.js';
 import type { EquipmentState } from '../types.js';
 import { commandLogPrefix, runWithCommandOrigin } from '../util/command-origin.js';
 
-const PROGRAM_DEDUPE_MS = 15_000;
-const PROGRAM_SETTLE_MS = 5_000;
+const PROGRAM_RESET_MS = 1_500;
+const DUPLICATE_WINDOW_MS = 20_000;
 
 export class HapEquipmentAccessory {
   private readonly service: Service;
-  private readonly programServices = new Map<string, Service>();
-  private pendingProgram?: { program: string; requestedAt: number };
+  private readonly momentaryPrograms = new Set<string>();
+  private lastCommand?: { action: string; running: boolean; finishedAt: number };
   private state: EquipmentState;
 
   constructor(
@@ -42,7 +42,6 @@ export class HapEquipmentAccessory {
     if (state.kind === 'switch') this.service.updateCharacteristic(C.On, state.on ?? false);
     if (state.kind === 'light') {
       this.service.updateCharacteristic(C.On, state.on ?? false);
-      this.updateProgramSwitches();
     }
     if (state.kind === 'thermostat' || state.kind === 'heat-cool-thermostat') {
       const currentTemperature = state.currentTemperatureC ?? this.platform.currentWaterTemperature(state.id);
@@ -112,14 +111,9 @@ export class HapEquipmentAccessory {
       this.service.setPrimaryService(true);
       this.service.setCharacteristic(C.Name, 'Light');
       this.service.setCharacteristic(C.ConfiguredName, 'Light');
-      this.service.getCharacteristic(C.On).onGet(() => this.state.on ?? false).onSet((value) => {
-        const preferred = state.id === 'pool-light' ? this.platform.config.poolLightProgram
-          : state.id === 'spa-light' ? this.platform.config.spaLightProgram : undefined;
-        if (value && preferred) this.accessory.context.lightProgram = preferred;
-        return this.runHapCommand(
-          state.id, `power ${value ? 'on' : 'off'}`, () => this.platform.setPower(state.id, Boolean(value)),
-        );
-      });
+      this.service.getCharacteristic(C.On).onGet(() => this.state.on ?? false).onSet((value) => this.runHapCommand(
+        state.id, `power ${value ? 'on' : 'off'}`, () => this.platform.setPower(state.id, Boolean(value)),
+      ));
       this.service.removeCharacteristic(this.service.getCharacteristic(C.Hue));
       this.service.removeCharacteristic(this.service.getCharacteristic(C.Saturation));
       this.service.removeCharacteristic(this.service.getCharacteristic(C.Brightness));
@@ -189,11 +183,11 @@ export class HapEquipmentAccessory {
     return C.TargetHeatingCoolingState.OFF;
   }
 
-  // Program switches behave like radio buttons: the selected program stays on
-  // while the light is on. They used to snap back off after a second, but
-  // HomeKit reads a characteristic that doesn't hold the written value as an
-  // unacknowledged write and resends it - each resend firing another
-  // set_light, in an endless loop that overwhelmed the controller.
+  // Program switches are momentary: they only pick a program and drop back
+  // off, since iAquaLink doesn't report the active program and it can be
+  // changed outside HomeKit. The write is acknowledged right away and the
+  // reset waits until after that - resetting while the write was still
+  // pending made HomeKit treat it as unacknowledged and resend it endlessly.
   private configureLightPrograms(state: EquipmentState): void {
     const S = this.platform.Service;
     const C = this.platform.Characteristic;
@@ -203,57 +197,40 @@ export class HapEquipmentAccessory {
         ?? this.accessory.addService(S.Switch, program, subtype);
       service.setCharacteristic(C.Name, program);
       service.setCharacteristic(C.ConfiguredName, program);
+      service.updateCharacteristic(C.On, false);
       service.getCharacteristic(C.On)
-        .onGet(() => this.activeProgram() === program)
-        .onSet((value) => value ? this.selectProgram(state.id, program) : this.deselectProgram(state.id, program));
-      this.programServices.set(program, service);
-    }
-    this.updateProgramSwitches();
-  }
-
-  private activeProgram(): string | undefined {
-    if (this.pendingProgram) return this.pendingProgram.program;
-    if (!this.state.on) return undefined;
-    return this.state.lightProgram ?? this.accessory.context.lightProgram;
-  }
-
-  private updateProgramSwitches(): void {
-    const active = this.activeProgram();
-    for (const [program, service] of this.programServices) {
-      service.updateCharacteristic(this.platform.Characteristic.On, program === active);
+        .onGet(() => this.momentaryPrograms.has(program))
+        .onSet((value) => {
+          if (!value) return;
+          this.momentaryPrograms.add(program);
+          void this.runHapCommand(state.id, `program ${program}`, () => this.platform.setLightProgram(state.id, program));
+          setTimeout(() => {
+            this.momentaryPrograms.delete(program);
+            service.updateCharacteristic(C.On, false);
+          }, PROGRAM_RESET_MS);
+        });
     }
   }
 
-  private async selectProgram(id: EquipmentState['id'], program: string): Promise<void> {
-    // Swallow duplicate writes for the program already being applied, so a
-    // controller retry can never turn into a second set_light.
-    if (this.pendingProgram?.program === program
-      && Date.now() - this.pendingProgram.requestedAt < PROGRAM_DEDUPE_MS) return;
-    if (!this.pendingProgram && this.activeProgram() === program) return;
-    this.pendingProgram = { program, requestedAt: Date.now() };
-    this.accessory.context.lightProgram = program;
-    this.updateProgramSwitches();
-    try {
-      await this.runHapCommand(id, `program ${program}`, () => this.platform.setLightProgram(id, program));
-    } finally {
-      // Keep the guard briefly after completion to absorb late retries.
-      setTimeout(() => {
-        if (this.pendingProgram?.program !== program) return;
-        this.pendingProgram = undefined;
-        this.updateProgramSwitches();
-      }, PROGRAM_SETTLE_MS);
-    }
-  }
-
-  private async deselectProgram(id: EquipmentState['id'], program: string): Promise<void> {
-    if (this.activeProgram() !== program || this.pendingProgram) return;
-    await this.runHapCommand(id, 'power off', () => this.platform.setPower(id, false));
-  }
-
+  // HomeKit can resend a write several times while it waits to see the
+  // result. Repeating a command that is already running, or that just ran,
+  // adds cloud traffic and, for lights, can cycle the color, so drop it.
   private runHapCommand(id: EquipmentState['id'], action: string, command: () => Promise<void>): Promise<void> {
-    return runWithCommandOrigin('HAP', this.platform.api.isMatterEnabled(), () => {
+    return runWithCommandOrigin('HAP', this.platform.api.isMatterEnabled(), async () => {
+      const last = this.lastCommand;
+      if (last?.action === action && (last.running || Date.now() - last.finishedAt < DUPLICATE_WINDOW_MS)) {
+        this.platform.log.debug(`${commandLogPrefix()}Ignoring repeated HAP Set command for ${id}: ${action}`);
+        return;
+      }
       this.platform.log.info(`${commandLogPrefix()}HAP Set command for ${id}: ${action}`);
-      return command();
+      const current = { action, running: true, finishedAt: 0 };
+      this.lastCommand = current;
+      try {
+        await command();
+      } finally {
+        current.running = false;
+        current.finishedAt = Date.now();
+      }
     });
   }
 }

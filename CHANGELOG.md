@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.8-beta.10] - 2026-11-04
+
+### Fixed
+
+- Ignore a HomeKit write that repeats a command already running, or one that finished within the last 20 seconds, for any accessory. Turning a light off was logging a burst of repeated `power off` commands as HomeKit resent the write; each one queued extra cloud reads behind the real command.
+
+### Changed
+
+- Light program switches are momentary again: they turn back off 1.5 seconds after being turned on, since iAquaLink doesn't report the active program and it can be changed outside HomeKit. The write is now acknowledged immediately and the switch only resets afterward, which avoids the resend loop fixed in 1.0.8-beta.9. Turning a program switch off no longer turns the light off.
+
 ## [1.0.8-beta.9] - 2026-11-04
 
 ### Fixed
