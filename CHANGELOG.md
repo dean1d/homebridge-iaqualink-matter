@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.9-beta.0] - 2026-11-06
+
+### Fixed
+
+- Keep retrying when iAquaLink is unreachable at startup. If login failed, the plugin logged "Unable to start iAquaLink" and never polled again; if login succeeded but the controller was offline, device discovery never ran, even after the controller came back. Polling now always starts, and the first successful poll connects and discovers devices without a Homebridge restart.
+- Log a failed refresh as a warning once per outage (later failures log at debug level) and log when iAquaLink is reachable again, instead of a warning on every poll.
+
 ## [1.0.8] - 2026-11-04
 
 ### Added

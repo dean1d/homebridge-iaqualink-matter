@@ -23,6 +23,8 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
   private readonly matterPublisher: MatterPublisher;
   private snapshot?: SystemSnapshot;
   private timer?: NodeJS.Timeout;
+  private discovered = false;
+  private refreshFailing = false;
 
   constructor(readonly log: Logger, readonly config: IAquaLinkConfig, readonly api: API) {
     this.Service = api.hap.Service;
@@ -126,18 +128,18 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     void this.queue.enqueue(() => this.refresh());
   }
 
+  // Start polling even if the first refresh fails: if the cloud or the
+  // controller is offline at startup, a later poll connects and runs
+  // discovery once it is reachable again, instead of the plugin staying
+  // dead until Homebridge is restarted.
   private async launch(): Promise<void> {
-    try {
-      await this.provider.connect();
-      await this.refresh(true);
-      const interval = Math.max(15, this.config.pollIntervalSeconds ?? 30) * 1000;
-      this.timer = setInterval(() => void this.queue.enqueue(() => this.refresh()), interval);
-    } catch (error) {
-      this.log.error(`Unable to start iAquaLink: ${String(error)}`);
-    }
+    await this.queue.enqueue(() => this.refresh());
+    const interval = Math.max(15, this.config.pollIntervalSeconds ?? 30) * 1000;
+    this.timer = setInterval(() => void this.queue.enqueue(() => this.refresh()), interval);
   }
 
-  private async refresh(initial = false): Promise<void> {
+  private async refresh(): Promise<void> {
+    const initial = !this.discovered;
     try {
       const receivedSnapshot = await this.provider.getSnapshot();
       const poolTemperature = receivedSnapshot.equipment.find(
@@ -173,11 +175,24 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       const snapshot = { ...receivedSnapshot, equipment };
       this.snapshot = snapshot;
       if (this.config.diagnosticMode) this.log.debug(`Sanitized snapshot: ${JSON.stringify(redact(snapshot))}`);
-      if (initial) this.discover(snapshot.equipment);
+      if (initial) {
+        this.discover(snapshot.equipment);
+        this.discovered = true;
+      }
+      if (this.refreshFailing) this.log.info('iAquaLink is reachable again.');
+      this.refreshFailing = false;
       for (const item of snapshot.equipment) this.handlers.get(item.id)?.update(item);
       if (!initial) void this.matterPublisher.update(snapshot.equipment);
     } catch (error) {
-      this.log.warn(`Refresh failed: ${String(error)}`);
+      // Warn once per outage; repeating it on every poll while the
+      // controller is offline would flood the log.
+      const message = `Refresh failed: ${String(error)}`;
+      if (this.refreshFailing) {
+        this.log.debug(message);
+      } else {
+        this.log.warn(`${message} Will keep retrying every poll.`);
+      }
+      this.refreshFailing = true;
     }
   }
 
