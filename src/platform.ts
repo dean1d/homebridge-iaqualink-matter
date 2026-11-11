@@ -144,7 +144,15 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       const receivedSnapshot = await this.provider.getSnapshot();
       // While one of our own commands is still settling, any difference in
       // this poll is (or may be a side effect of) that command, not an
-      // outside change, so it is not reported as one.
+      // outside change, so it is not reported as one. Expired entries are
+      // dropped first: a command that never showed up in the cloud state
+      // (e.g. it was undone from the app before the cloud caught up), or
+      // one remembered for equipment this system doesn't have, would
+      // otherwise keep suppressing the report - the latter forever.
+      const now = Date.now();
+      for (const [id, pending] of this.pendingStates) {
+        if (pending.expiresAt <= now) this.pendingStates.delete(id);
+      }
       const settling = this.pendingStates.size > 0;
       const previous = this.snapshot;
       const poolTemperature = receivedSnapshot.equipment.find(

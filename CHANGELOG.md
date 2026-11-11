@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.9] - 2026-11-10
+
+### Added
+
+- Log changes made outside HomeKit/Matter (the iAquaLink app, the panel, or a schedule) when a poll notices them: power, thermostat mode, heating/cooling setpoints, and light program. Sensor readings and the heater's heating/idle action are not logged, and nothing is reported while one of the plugin's own commands is still settling.
+
+### Fixed
+
+- Keep retrying when iAquaLink is unreachable at startup. Polling now always starts, and the first successful poll connects and discovers devices without a Homebridge restart.
+- Log a failed refresh as a warning once per outage (later failures log at debug level) and log when iAquaLink is reachable again, instead of a warning on every poll.
+- Log an outside change that undoes a HomeKit/Matter command before iAquaLink reported that command (previously dropped), and stop a setpoint change from silencing outside-change logging until restart on systems without a heat pump.
+
 ## [1.0.9-beta.1] - 2026-11-10
 
 ### Added
