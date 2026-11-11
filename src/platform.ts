@@ -142,6 +142,11 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
     const initial = !this.discovered;
     try {
       const receivedSnapshot = await this.provider.getSnapshot();
+      // While one of our own commands is still settling, any difference in
+      // this poll is (or may be a side effect of) that command, not an
+      // outside change, so it is not reported as one.
+      const settling = this.pendingStates.size > 0;
+      const previous = this.snapshot;
       const poolTemperature = receivedSnapshot.equipment.find(
         (item) => item.id === 'pool-temperature',
       )?.currentTemperatureC;
@@ -174,6 +179,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       });
       const snapshot = { ...receivedSnapshot, equipment };
       this.snapshot = snapshot;
+      if (previous && !settling) this.logExternalChanges(previous.equipment, snapshot.equipment);
       if (this.config.diagnosticMode) this.log.debug(`Sanitized snapshot: ${JSON.stringify(redact(snapshot))}`);
       if (initial) {
         this.discover(snapshot.equipment);
@@ -193,6 +199,41 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
         this.log.warn(`${message} Will keep retrying every poll.`);
       }
       this.refreshFailing = true;
+    }
+  }
+
+  // Report user-controllable state that changed between two polls without a
+  // HAP/Matter command of ours behind it - e.g. from the iAquaLink app, the
+  // panel, or a schedule. Sensor readings and the heater's running/idle
+  // action are left out: they drift on their own and would flood the log.
+  private logExternalChanges(before: EquipmentState[], after: EquipmentState[]): void {
+    const temperature = (value: number) => `${value.toFixed(1)}°C`;
+    for (const item of after) {
+      const old = before.find((candidate) => candidate.id === item.id);
+      if (!old) continue;
+      const changes: string[] = [];
+      if (old.on !== undefined && item.on !== undefined && old.on !== item.on) {
+        changes.push(item.on ? 'turned on' : 'turned off');
+      }
+      if (old.mode !== undefined && item.mode !== undefined && old.mode !== item.mode) {
+        changes.push(`mode ${old.mode} -> ${item.mode}`);
+      }
+      const setpoints = [
+        ['heating setpoint', old.targetTemperatureC, item.targetTemperatureC],
+        ['cooling setpoint', old.coolingTargetTemperatureC, item.coolingTargetTemperatureC],
+      ] as const;
+      for (const [label, from, to] of setpoints) {
+        if (from !== undefined && to !== undefined && Math.abs(from - to) >= 0.06) {
+          changes.push(`${label} ${temperature(from)} -> ${temperature(to)}`);
+        }
+      }
+      if (old.lightProgram !== undefined && item.lightProgram !== undefined
+        && old.lightProgram !== item.lightProgram) {
+        changes.push(`light program ${old.lightProgram} -> ${item.lightProgram}`);
+      }
+      if (changes.length) {
+        this.log.info(`${item.name} (${item.id}) changed outside HomeKit/Matter: ${changes.join(', ')}`);
+      }
     }
   }
 

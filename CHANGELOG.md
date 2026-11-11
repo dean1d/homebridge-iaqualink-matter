@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.9-beta.1] - 2026-11-10
+
+### Added
+
+- Log changes made outside HomeKit/Matter (the iAquaLink app, the panel, or a schedule) when a poll notices them: power, thermostat mode, heating/cooling setpoints, and light program. Sensor readings and the heater's heating/idle action are not logged, and nothing is reported while one of the plugin's own commands is still settling.
+
 ## [1.0.9-beta.0] - 2026-11-06
 
 ### Fixed
