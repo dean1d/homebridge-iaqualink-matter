@@ -43,6 +43,74 @@ function provider(fetchMock: ReturnType<typeof vi.fn>, overrides = {}) {
 }
 
 describe('CloudIAquaLinkProvider', () => {
+  const iclDevices = {
+    icl_info_list: [
+      { zoneId: 'zone-pool', zoneName: 'Pool Lights', zoneStatus: 'off', dim_level: '45' },
+      { zoneId: 'zone-spa', zoneName: 'Spa Lights', zoneStatus: 'on', dim_level: '40' },
+      { zoneId: 'zone-pool', zoneName: 'Duplicate', zoneStatus: 'on', dim_level: '100' },
+      { zoneName: 'Missing ID', zoneStatus: 'off' },
+      { zoneId: 'blank-level', zoneName: 'Blank Level', zoneStatus: 'off', dim_level: '' },
+      { zoneId: 'bad-level', zoneName: 'Bad Level', zoneStatus: 'off', dim_level: '101' },
+    ],
+  };
+  const scenes = { onetouch_screen: [
+    { onetouch_1: [{ status: '1' }, { state: '0' }, { label: 'All OFF' }] },
+    { onetouch_2: [{ status: '1' }, { state: '1' }, { label: 'Spa Mode' }] },
+    { onetouch_3: [{ status: '1' }, { state: '0' }, { label: 'Clean Mode' }] },
+    { onetouch_4: [{ status: '0' }, { state: '0' }, { label: 'ONETOUCH 4' }] },
+  ] };
+
+  it('discovers RS-485 ICL zones without devices_screen and preserves names, IDs and brightness', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login)).mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response(home)).mockResolvedValueOnce(response(iclDevices));
+    const snapshot = await provider(fetchMock).getSnapshot();
+    expect(snapshot.equipment.filter((item) => item.id.startsWith('icl-'))).toHaveLength(4);
+    expect(snapshot.equipment.find((item) => item.id === 'icl-zone-pool')).toMatchObject({
+      name: 'Pool Lights', kind: 'light', on: false, brightness: 45, metadata: { readOnly: true },
+    });
+    expect(snapshot.equipment.find((item) => item.id === 'icl-zone-spa')).toMatchObject({
+      name: 'Spa Lights', on: true, brightness: 40,
+    });
+    expect(snapshot.equipment.find((item) => item.id === 'icl-zone-pool')).not.toHaveProperty('lightPrograms');
+    for (const id of ['icl-blank-level', 'icl-bad-level']) {
+      expect(snapshot.equipment.find((item) => item.id === id)).not.toHaveProperty('brightness');
+    }
+  });
+
+  it('discovers configured OneTouch scenes independently of equipment labels', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login)).mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response({ ...home as object, onetouch: true }))
+      .mockResolvedValueOnce(response(devices)).mockResolvedValueOnce(response(scenes));
+    const snapshot = await provider(fetchMock).getSnapshot();
+    expect(snapshot.equipment.filter((item) => item.id.startsWith('onetouch-'))).toMatchObject([
+      { id: 'onetouch-1', name: 'All OFF', on: false, metadata: { readOnly: true } },
+      { id: 'onetouch-2', name: 'Spa Mode', on: true },
+      { id: 'onetouch-3', name: 'Clean Mode', on: false },
+    ]);
+    expect(snapshot.equipment.find((item) => item.id === 'spa-mode')).toBeDefined();
+  });
+
+  it('skips OneTouch fetching and discovery when the option is disabled', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login)).mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response({ ...home as object, onetouch: 'true' }))
+      .mockResolvedValueOnce(response(devices));
+    const snapshot = await provider(fetchMock, { exposeOneTouchScenes: false }).getSnapshot();
+    expect(snapshot.equipment.some((item) => item.id.startsWith('onetouch-'))).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+  });
+
+  it.each(['icl-zone-pool', 'onetouch-3'] as const)('rejects writes to %s even with cloud control enabled', async (id) => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(response(login)).mockResolvedValueOnce(response(systems))
+      .mockResolvedValueOnce(response({ ...home as object, onetouch: 'true' }))
+      .mockResolvedValueOnce(response(iclDevices)).mockResolvedValueOnce(response(scenes));
+    await expect(provider(fetchMock, { enableCloudControl: true }).setPower(id, true)).rejects.toThrow('read-only');
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+  });
+
   it('reports login failure without response details', async () => {
     const fetchMock = vi.fn(async () => response({ password: 'leaked-secret' }, 401));
     await expect(provider(fetchMock).connect()).rejects.toBeInstanceOf(CloudAuthenticationError);

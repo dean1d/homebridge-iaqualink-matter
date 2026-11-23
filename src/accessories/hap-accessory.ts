@@ -42,6 +42,7 @@ export class HapEquipmentAccessory {
     if (state.kind === 'switch') this.service.updateCharacteristic(C.On, state.on ?? false);
     if (state.kind === 'light') {
       this.service.updateCharacteristic(C.On, state.on ?? false);
+      if (state.brightness !== undefined) this.service.updateCharacteristic(C.Brightness, state.brightness);
     }
     if (state.kind === 'thermostat' || state.kind === 'heat-cool-thermostat') {
       const currentTemperature = state.currentTemperatureC ?? this.platform.currentWaterTemperature(state.id);
@@ -100,6 +101,10 @@ export class HapEquipmentAccessory {
       return;
     }
     if (state.kind === 'switch') {
+      if (state.metadata?.readOnly) {
+        this.configureReadOnlyCharacteristic(C.On, () => this.state.on ?? false);
+        return;
+      }
       this.service.getCharacteristic(C.On)
         .onGet(() => this.state.on ?? false)
         .onSet((value) => this.runHapCommand(state.id, `power ${value ? 'on' : 'off'}`,
@@ -107,10 +112,22 @@ export class HapEquipmentAccessory {
       return;
     }
     if (state.kind === 'light') {
-      this.service.displayName = 'Light';
+      const name = state.metadata?.icl ? state.name : 'Light';
+      this.service.displayName = name;
       this.service.setPrimaryService(true);
-      this.service.setCharacteristic(C.Name, 'Light');
-      this.service.setCharacteristic(C.ConfiguredName, 'Light');
+      this.service.setCharacteristic(C.Name, name);
+      this.service.addOptionalCharacteristic(C.ConfiguredName);
+      this.service.setCharacteristic(C.ConfiguredName, name);
+      if (state.metadata?.readOnly) {
+        this.configureReadOnlyCharacteristic(C.On, () => this.state.on ?? false);
+        if (state.metadata?.icl || state.brightness !== undefined) {
+          this.configureReadOnlyCharacteristic(C.Brightness, () => {
+            if (this.state.brightness === undefined) throw new Error('The controller has no brightness reading.');
+            return this.state.brightness;
+          });
+        }
+        return;
+      }
       this.service.getCharacteristic(C.On).onGet(() => this.state.on ?? false).onSet((value) => this.runHapCommand(
         state.id, `power ${value ? 'on' : 'off'}`, () => this.platform.setPower(state.id, Boolean(value)),
       ));
@@ -121,6 +138,18 @@ export class HapEquipmentAccessory {
       return;
     }
     this.configureThermostat(state);
+  }
+
+  private configureReadOnlyCharacteristic(
+    type: Parameters<Service['getCharacteristic']>[0],
+    get: () => boolean | number,
+  ): void {
+    const characteristic = this.service.getCharacteristic(type)!;
+    characteristic.setProps({ perms: characteristic.props.perms.filter((permission) => permission !== 'pw') })
+      .onGet(get)
+      .onSet(() => {
+        throw new this.platform.api.hap.HapStatusError(this.platform.api.hap.HAPStatus.READ_ONLY_CHARACTERISTIC);
+      });
   }
 
   private configureThermostat(state: EquipmentState): void {

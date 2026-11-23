@@ -109,6 +109,11 @@ export class MatterPublisher {
           });
         } else if (item.kind === 'switch' || item.kind === 'light') {
           await this.api.matter.updateAccessoryState(uuid, 'onOff', { onOff: item.on ?? false });
+          if (item.kind === 'light' && item.brightness !== undefined) {
+            await this.api.matter.updateAccessoryState(uuid, 'levelControl', {
+              currentLevel: Math.round(item.brightness * 254 / 100),
+            });
+          }
         } else {
           await this.api.matter.updateAccessoryState(uuid, 'thermostat', this.thermostatState(item));
         }
@@ -121,7 +126,7 @@ export class MatterPublisher {
   private deviceType(item: EquipmentState) {
     const types = this.api.matter!.deviceTypes;
     if (item.kind === 'temperature') return types.TemperatureSensor;
-    if (item.kind === 'light') return types.OnOffLight;
+    if (item.kind === 'light') return item.metadata?.icl || item.brightness !== undefined ? types.DimmableLight : types.OnOffLight;
     if (item.kind === 'thermostat') {
       return devices.ThermostatDevice.with(
         devices.ThermostatRequirements.ThermostatServer.with('Heating'),
@@ -144,7 +149,15 @@ export class MatterPublisher {
           : null,
       },
     };
-    if (item.kind === 'light') return { onOff: { onOff: item.on ?? false } };
+    if (item.kind === 'light') return {
+      onOff: { onOff: item.on ?? false },
+      ...(!item.metadata?.icl && item.brightness === undefined ? {} : {
+        levelControl: {
+          minLevel: 1, maxLevel: 254,
+          ...(item.brightness === undefined ? {} : { currentLevel: Math.round(item.brightness * 254 / 100) }),
+        },
+      }),
+    };
     if (item.kind === 'switch') return { onOff: { onOff: item.on ?? false } };
     return { thermostat: this.thermostatState(item) };
   }
@@ -219,6 +232,17 @@ export class MatterPublisher {
   }
 
   private handlers(item: EquipmentState): MatterAccessory['handlers'] {
+    if (item.metadata?.readOnly) {
+      const reject = async () => {
+        throw new this.api.matter!.status.InvalidInState('This accessory is read-only; cloud commands have not been verified.');
+      };
+      return {
+        onOff: { on: reject, off: reject, toggle: reject },
+        ...(!item.metadata?.icl && item.brightness === undefined ? {} : {
+          levelControl: { moveToLevel: reject, moveToLevelWithOnOff: reject, move: reject, step: reject, stop: reject },
+        }),
+      };
+    }
     if (item.kind === 'switch' || item.kind === 'light') {
       return {
         onOff: {

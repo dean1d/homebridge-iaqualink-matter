@@ -33,6 +33,7 @@ export class IAquaLinkPlatform implements DynamicPlatformPlugin {
       ? new MockIAquaLinkProvider()
       : new CloudIAquaLinkProvider(log, config.username, config.password, {
           enableCloudControl: config.enableCloudControl !== false,
+          exposeOneTouchScenes: config.exposeOneTouchScenes !== false,
         });
     this.matterPublisher = new MatterPublisher(api, log, {
       setPower: (id, on) => this.setPower(id, on),

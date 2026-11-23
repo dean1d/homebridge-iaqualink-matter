@@ -71,6 +71,7 @@ The recommended configuration method is the Homebridge UI. A minimal manual conf
 | `enableCloudControl` | `true` | Permit commands that change real pool equipment. Disable for monitoring only. |
 | `pollIntervalSeconds` | `30` | Cloud polling interval from 15 to 300 seconds. |
 | `exposeLightShows` | `true` | Expose each discovered Jandy light color and show as a momentary HomeKit switch. Disable for a simpler HomeKit layout. |
+| `exposeOneTouchScenes` | `true` | Expose configured OneTouch scenes by label as monitoring switches. Beta support reports state only; scene commands are disabled. |
 | `poolLightProgram` | `Caribbean Blue` | Program selected when the Matter pool light is turned on.  Matter does not currently support multiple switches under one device, so you must sellect a default light color if you are using Matter to turn the light on and off. |
 | `spaLightProgram` | `Caribbean Blue` | Program selected when the Matter spa light is turned on. Matter does not currently support multiple switches under one device, so you must sellect a default light color if you are using Matter to turn the light on and off. |
 | `diagnosticMode` | `false` | Log sanitized equipment snapshots for troubleshooting. |
@@ -81,6 +82,14 @@ The recommended configuration method is the Homebridge UI. A minimal manual conf
 Cloud writes are enabled by default, allowing the plugin to control discovered pumps, heaters, the heat pump/chiller, mapped auxiliaries, and Jandy lights. Set `enableCloudControl` to `false` for monitoring only.
 
 Test commands individually after enabling control. The plugin uses undocumented cloud endpoints that may behave differently across controller models. The salt-water chlorinator remains read-only because no verified write command is available.
+
+### Infinite WaterColors and OneTouch (beta)
+
+Infinite WaterColors RS-485 zones from `icl_info_list` appear under their zone names as HomeKit lights with power and brightness, and as Matter dimmable lights. Each zone has its own stable ID, independent of relay lights and zone names. Brightness is reported even while a zone is off. Color, white-channel values, shows, and ICL writes are not supported in this beta.
+
+Configured OneTouch scenes (`status: "1"`) appear as separate switches named after their labels, including “All OFF”, “Spa Mode”, and “Clean Mode”. Their state follows the controller's reported `state`; it does not infer whether every action in a scene has completed. Set `exposeOneTouchScenes` to `false` and restart Homebridge to hide them.
+
+Both additions are **monitoring only**, even with cloud control enabled. HomeKit characteristics are read-only, and Matter power/dimming requests return an error. Change a zone or scene from iAquaLink and allow one polling interval to check the reported state. OneTouch scenes previously recognized by equipment labels now use separate scene IDs and no longer issue unverified scene commands.
 
 After the cloud accepts a temperature change, iAquaLink may still return the previous setpoint for one or more polls. The plugin temporarily retains the accepted setpoint for at least 60 seconds (or two polling intervals) so HomeKit and Matter do not jump back to stale values. This command-confirmation behavior is automatic and does not need a separate setting.
 

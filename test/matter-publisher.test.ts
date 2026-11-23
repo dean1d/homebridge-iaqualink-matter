@@ -4,6 +4,51 @@ import { associateMatterAccessory, MatterPublisher } from '../src/matter/matter-
 import type { EquipmentState } from '../src/types.js';
 
 describe('associateMatterAccessory', () => {
+  it('reports dimmable ICL zones and OneTouch scenes while rejecting all monitoring commands', async () => {
+    const register = vi.fn().mockResolvedValue(undefined);
+    const update = vi.fn().mockResolvedValue(undefined);
+    const dimmable = {};
+    const api = {
+      isMatterEnabled: () => true,
+      hap: { uuid: { generate: (value: string) => value } },
+      matter: {
+        deviceTypes: { DimmableLight: dimmable, OnOffOutlet: {} },
+        registerPlatformAccessories: register,
+        updateAccessoryState: update,
+        status: { InvalidInState: Error },
+      },
+    } as unknown as API;
+    const commands = {
+      setPower: vi.fn(), setTargetTemperature: vi.fn(),
+      setCoolingTargetTemperature: vi.fn(), setThermostatMode: vi.fn(),
+    };
+    const publisher = new MatterPublisher(api, { info: vi.fn(), warn: vi.fn(), debug: vi.fn() } as unknown as Logger, commands);
+    const zone: EquipmentState = {
+      id: 'icl-zone-pool', name: 'Pool Lights', kind: 'light', available: true,
+      on: false, brightness: 45, metadata: { readOnly: true, icl: true },
+    };
+    publisher.publish([zone, {
+      id: 'onetouch-3', name: 'Clean Mode', kind: 'switch', available: true,
+      on: false, metadata: { readOnly: true, oneTouch: true },
+    }]);
+    const accessories = register.mock.calls[0][2] as MatterAccessory[];
+    expect(accessories[0].deviceType).toBe(dimmable);
+    expect(accessories[0].displayName).toBe('Pool Lights');
+    expect(accessories[0].clusters).toMatchObject({ onOff: { onOff: false }, levelControl: { currentLevel: 114 } });
+    expect(accessories[1].displayName).toBe('Clean Mode');
+    for (const accessory of accessories) {
+      for (const cluster of Object.values(accessory.handlers!)) {
+        for (const handler of Object.values(cluster!)) {
+          await expect((handler as () => Promise<void>)()).rejects.toThrow('read-only');
+        }
+      }
+    }
+    expect(commands.setPower).not.toHaveBeenCalled();
+    await publisher.update([{ ...zone, on: true, brightness: 40 }]);
+    expect(update).toHaveBeenCalledWith(expect.any(String), 'onOff', { onOff: true });
+    expect(update).toHaveBeenCalledWith(expect.any(String), 'levelControl', { currentLevel: 102 });
+  });
+
   it('sets the ownership fields serialized by Homebridge 2.2.1', () => {
     const accessory = {} as MatterAccessory & {
       _associatedPlugin?: string;

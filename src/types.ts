@@ -7,6 +7,7 @@ export interface IAquaLinkConfig extends PlatformConfig {
   pollIntervalSeconds?: number;
   diagnosticMode?: boolean;
   exposeLightShows?: boolean;
+  exposeOneTouchScenes?: boolean;
   poolLightProgram?: string;
   spaLightProgram?: string;
   useMockApi?: boolean;
@@ -34,7 +35,9 @@ export type EquipmentId =
   | 'pool-light'
   | 'spa-light'
   | 'swg'
-  | `aux-${string}`;
+  | `aux-${string}`
+  | `icl-${string}`
+  | `onetouch-${string}`;
 
 export interface EquipmentState {
   id: EquipmentId;
@@ -48,6 +51,7 @@ export interface EquipmentState {
   mode?: 'off' | 'heat' | 'cool' | 'auto';
   currentAction?: 'off' | 'idle' | 'heating' | 'cooling';
   lightProgram?: string;
+  brightness?: number;
   lightPrograms?: string[];
   metadata?: Record<string, unknown>;
 }

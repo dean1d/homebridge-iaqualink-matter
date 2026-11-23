@@ -24,6 +24,12 @@
         "type": "boolean",
         "default": true
       },
+      "exposeOneTouchScenes": {
+        "title": "Expose OneTouch Scenes",
+        "description": "Show configured OneTouch scenes by label. Beta support reports scene state only; scene commands are not enabled.",
+        "type": "boolean",
+        "default": true
+      },
       "poolLightProgram": {
         "title": "Pool Light Program",
         "type": "string",
@@ -41,7 +47,7 @@
   },
   "layout": [
     "name", "username", "password", "enableCloudControl", "pollIntervalSeconds",
-    "exposeLightShows",
+    "exposeLightShows", "exposeOneTouchScenes",
     "poolLightProgram", "spaLightProgram", "diagnosticMode", "useMockApi"
   ]
 }

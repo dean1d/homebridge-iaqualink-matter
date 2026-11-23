@@ -23,6 +23,7 @@ type Fetch = typeof globalThis.fetch;
 export interface CloudProviderOptions {
   fetch?: Fetch;
   enableCloudControl?: boolean;
+  exposeOneTouchScenes?: boolean;
   requestTimeoutMs?: number;
   maxRetries?: number;
   retryBaseDelayMs?: number;
@@ -48,6 +49,7 @@ export class CloudRequestError extends Error {
 export class CloudIAquaLinkProvider implements IAquaLinkProvider {
   private readonly fetch: Fetch;
   private readonly enableCloudControl: boolean;
+  private readonly exposeOneTouchScenes: boolean;
   private readonly requestTimeoutMs: number;
   private readonly maxRetries: number;
   private readonly retryBaseDelayMs: number;
@@ -73,6 +75,7 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
   ) {
     this.fetch = options.fetch ?? globalThis.fetch;
     this.enableCloudControl = options.enableCloudControl ?? false;
+    this.exposeOneTouchScenes = options.exposeOneTouchScenes ?? true;
     this.requestTimeoutMs = options.requestTimeoutMs ?? 10_000;
     this.maxRetries = options.maxRetries ?? 2;
     this.retryBaseDelayMs = options.retryBaseDelayMs ?? 250;
@@ -98,7 +101,7 @@ export class CloudIAquaLinkProvider implements IAquaLinkProvider {
     if (status && status !== 'online') throw new CloudRequestError('The iAquaLink system is not online.');
     const devicesResponse = await this.sessionCommand('get_devices');
     const equipment = mapEquipment(home, devicesResponse);
-    if (stringValue(homeResponse.onetouch) === 'true') {
+    if (this.exposeOneTouchScenes && stateIsOn(homeResponse.onetouch)) {
       addOneTouchEquipment(equipment, await this.sessionCommand('get_onetouch'));
     }
     this.temperatureScale = stringValue(home.temp_scale) || 'F';
@@ -427,6 +430,7 @@ function flattenObjectArray(value: unknown): JsonObject {
   return Array.isArray(value) ? Object.assign({}, ...value.filter(isJsonObject)) : {};
 }
 function stateIsOn(value: unknown): boolean {
+  if (typeof value === 'boolean') return value;
   return ['1', '3', 'true', 'on', 'enabled'].includes(stringValue(value).toLowerCase());
 }
 function temperatureC(value: unknown, scale: string): number | undefined {
@@ -457,6 +461,7 @@ function mapEquipment(home: JsonObject, devicesResponse: JsonObject): EquipmentS
   addHeatPump(equipment, home, scale);
   addSaltWaterStatus(equipment, home);
   addAuxEquipment(equipment, devicesResponse);
+  addIclEquipment(equipment, devicesResponse);
   return equipment;
 }
 function addTemperature(
@@ -582,16 +587,41 @@ function equipmentName(id: EquipmentId): string {
   };
   return names[id] ?? id;
 }
+function addIclEquipment(equipment: EquipmentState[], response: JsonObject): void {
+  if (!Array.isArray(response.icl_info_list)) return;
+  for (const zone of response.icl_info_list.filter(isJsonObject)) {
+    const zoneId = stringValue(zone.zoneId).trim();
+    if (!zoneId) continue;
+    const id: EquipmentId = `icl-${zoneId}`;
+    if (equipment.some((item) => item.id === id)) continue;
+    const rawBrightness = stringValue(zone.dim_level).trim();
+    const brightness = rawBrightness ? Number(rawBrightness) : NaN;
+    equipment.push({
+      id, name: stringValue(zone.zoneName).trim() || `WaterColors ${zoneId}`,
+      kind: 'light', available: true, on: stateIsOn(zone.zoneStatus),
+      ...(Number.isFinite(brightness) && brightness >= 0 && brightness <= 100
+        ? { brightness: Math.round(brightness) } : {}),
+      // ICL zones are RS-485 devices, not aux relays. Do not route them
+      // through set_light or advertise the relay light's color programs.
+      metadata: { readOnly: true, icl: true },
+    });
+  }
+}
+
 function addOneTouchEquipment(equipment: EquipmentState[], response: JsonObject): void {
   const oneTouch = flattenObjectArray(response.onetouch_screen);
   for (const [name, raw] of Object.entries(oneTouch)) {
     if (!name.startsWith('onetouch_') || !Array.isArray(raw)) continue;
     const attributes = flattenObjectArray(raw);
-    const id = auxEquipmentId(stringValue(attributes.label).toLowerCase());
-    if (!id || equipment.some((item) => item.id === id)) continue;
+    if (stringValue(attributes.status) !== '1') continue;
+    const label = stringValue(attributes.label).trim();
+    if (!label) continue;
+    const id: EquipmentId = `onetouch-${name.slice('onetouch_'.length)}`;
+    if (equipment.some((item) => item.id === id)) continue;
     equipment.push({
-      id, name: equipmentName(id), kind: 'switch', available: true, on: stateIsOn(attributes.state),
-      metadata: { command: `set_${name}` },
+      id, name: label, kind: 'switch', available: true, on: stateIsOn(attributes.state),
+      // Scene activation/deactivation semantics have not been verified.
+      metadata: { readOnly: true, oneTouch: true },
     });
   }
 }

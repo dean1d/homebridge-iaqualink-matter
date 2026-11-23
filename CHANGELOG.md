@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.12-beta.0] - 2026-11-23
+
+### Added
+
+- Discover Infinite WaterColors RS-485 light zones from `icl_info_list`, preserving zone names and stable zone IDs. Report power and brightness through read-only HomeKit lights and Matter dimmable lights. ICL color, shows, and write commands are not enabled.
+- Expose configured OneTouch scenes (`status: "1"`) by label as separate monitoring switches, including custom scenes such as Clean Mode. Add `exposeOneTouchScenes` (default `true`) to disable scene discovery.
+
+### Changed
+
+- OneTouch scenes use their own slot-based IDs rather than being mapped to a few equipment labels. Scene switches report controller state only; unverified activation/deactivation commands are disabled in this beta.
+- Enforce read-only HomeKit characteristics and reject Matter power/dimming commands for monitoring accessories, even with cloud control enabled.
+
 ## [1.0.11] - 2026-11-23
 
 ### Fixed
