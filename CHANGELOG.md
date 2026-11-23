@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.10] - 2026-11-22
+
+### Added
+
+- Declare Node.js 26 support, verified on v26.13.1. Use Homebridge 2.5 or later with Node.js 26.
+
 ## [1.0.9] - 2026-11-10
 
 ### Added
