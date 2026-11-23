@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.11] - 2026-11-23
+
+### Fixed
+
+- Accept the maximum heating setpoint of 40°C / 104°F in HomeKit without an illegal-value warning or clamping to 39.9°C. Anchor heating characteristics at 1°C (which rounds to the controller's 34°F minimum) to avoid floating-point errors in Homebridge's 0.1°C step validation.
+
 ## [1.0.10] - 2026-11-22
 
 ### Added

@@ -125,7 +125,11 @@ export class HapEquipmentAccessory {
 
   private configureThermostat(state: EquipmentState): void {
     const C = this.platform.Characteristic;
-    const minimumTargetC = state.id === 'heat-pump' ? 3.9 : 1.1;
+    // Anchor heating steps at a whole degree: HAP's floating-point step
+    // calculation with a 1.1 minimum floors the 40°C maximum to 39.9°C.
+    // 1°C also rounds to the controller's minimum of 34°F (or 1°C).
+    const minimumHeatingTargetC = 1;
+    const minimumTargetC = state.id === 'heat-pump' ? 3.9 : minimumHeatingTargetC;
     if (state.currentTemperatureC !== undefined) {
       this.service.setCharacteristic(C.CurrentTemperature, state.currentTemperatureC);
     } else {
@@ -154,7 +158,7 @@ export class HapEquipmentAccessory {
         .onSet((value) => this.runHapCommand(state.id, `cooling setpoint ${Number(value)}°C`,
           () => this.platform.setCoolingTargetTemperature(state.id, Number(value))));
       this.service.getCharacteristic(C.CoolingThresholdTemperature)
-        .setProps({ minValue: 1.1, maxValue: 40, minStep: 0.1 })
+        .setProps({ minValue: minimumHeatingTargetC, maxValue: 40, minStep: 0.1 })
         .onGet(() => this.state.targetTemperatureC ?? 30)
         .onSet((value) => this.runHapCommand(state.id, `heating setpoint ${Number(value)}°C`,
           () => this.platform.setTargetTemperature(state.id, Number(value))));
